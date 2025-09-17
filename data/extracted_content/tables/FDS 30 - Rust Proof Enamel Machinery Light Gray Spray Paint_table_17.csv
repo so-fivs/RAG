@@ -1,0 +1,10 @@
+0,1,2,3
+Components,,Species,TestResults
+methylpropylketone(,CAS107-87-9),,
+Aquatic,,,
+Fish,LC50,Fatheadminnow(Pimephalespromelas),"1190-1290mg/l,96hours"
+titaniumdioxide(CAS,13463-67-7),,
+Aquatic,,,
+Crustacea,EC50,Waterflea(Daphniamagna),">1000mg/l,48hours"
+Acute,,,
+Fish,LC50,Fatheadminnow(Pimephalespromelas),"1000mg/l,96hours"

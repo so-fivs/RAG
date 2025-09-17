@@ -1,0 +1,13 @@
+0,1
+DrugEnforcementAdministration(DEA).List1&2,ExemptChemicalMixtures(21CFR1310.12(c))
+acetone(CAS67-64-1),35%WV
+methylisobutylketone(CAS108-10-1),35%WV
+DEAExemptChemicalMixturesCodeNumber,
+acetone(CAS67-64-1),6532
+methylisobutylketone(CAS108-10-1),6715
+FEMAPrioritySubstancesRespiratoryHealthand,SafetyintheFlavorManufacturingWorkplace
+acetone(CAS67-64-1),Lowpriority
+isobutylacetate(CAS110-19-0),Lowpriority
+methylisobutylketone(CAS108-10-1),Lowpriority
+methylpropylketone(CAS107-87-9),Lowpriority
+Notregulated.FoodandDrug,
