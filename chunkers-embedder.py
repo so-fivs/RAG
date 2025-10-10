@@ -305,8 +305,8 @@ class ChunkMetadataBuilder:
             
             # Metadata de clasificación
             'componentes_cas': doc_metadata.get('componentes_quimicos', []),
-            'codigos_h': doc_metadata.get('indicaciones_peligro', []),
-            'codigos_p': doc_metadata.get('frases_precaucion', []),
+            'codigos_h': doc_metadata.get('indicaciones_peligro_detalle', []),
+            'codigos_p': doc_metadata.get('frases_precaucion_detalle', []),
         }
         
         # Eliminar valores None

@@ -15,7 +15,7 @@ from datetime import datetime
 class ChromaDBIngestor:
     """Gestiona la ingesta de chunks en ChromaDB."""
     
-    def __init__(self, config, reset_db: bool = False):
+    def __init__(self, config, reset_db: bool = True):
         """
         Args:
             config: Instancia de ProjectConfig
