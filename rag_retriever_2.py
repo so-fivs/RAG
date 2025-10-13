@@ -350,7 +350,16 @@ class HybridRetriever:
 
 class EntityExtractor:
     """Extractor de entidades de queries."""
-    
+    def _map_section_name(self, section_name: str) -> List[str]:
+        """Mapea nombre de sección a posibles valores en metadata."""
+        section_lower = section_name.lower()
+            
+        for key, values in SECTION_MAPPING.items():
+            if key in section_lower:
+                return values
+            
+        return [section_name]
+        
     ENTITY_SCHEMA = {
         "producto": {"type": "string", "examples": ["Esmalte Epóxico", "Pintura Texturizada"]},
         "componente_quimico": {"type": "string", "examples": ["Xileno", "Acetato de butilo"]},
@@ -407,6 +416,17 @@ Responde SOLO en formato JSON sin explicaciones.
                 else:
                     validated[key] = value
         return validated
+    
+SECTION_MAPPING = {
+    'peligros': ['identificacion_peligros', 'indicaciones_peligro', 'clasificacion_peligro'],
+    'composicion': ['composicion_componentes'],
+    'primeros_auxilios': ['primeros_auxilios'],
+    'incendio': ['medidas_incendio'],
+    'manipulacion': ['manipulacion_almacenamiento'],
+    'exposicion': ['controles_exposicion'],
+    'propiedades': ['propiedades_fisicoquimicas']
+}
+
 
 class QueryRewriter:
     """Reescribe queries ambiguas con contexto extraído."""
@@ -462,7 +482,8 @@ def main():
         "Dame sus límites de exposición",
         "Dime todo sobre el producto",
         "¿Qué componentes tiene?",
-        "¿Qué componentes tiene el diluyente Xileno?" 
+        "¿Qué componentes tiene el diluyente Xileno?",
+        "Que peligros tiene el esmalte epoxico" 
     ]
     
     for i, query_original in enumerate(conversation_steps):
