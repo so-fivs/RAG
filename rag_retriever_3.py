@@ -30,7 +30,6 @@ class SearchResult:
     tipo_contenido: str
     rank_score: Optional[float] = None
 
-
 @dataclass
 class StructuredMetadata:
     """Metadata estructurada extraída de chunks."""
@@ -39,7 +38,6 @@ class StructuredMetadata:
     codigos_p: List[Dict[str, str]] = field(default_factory=list)
     componentes_cas: List[Dict[str, str]] = field(default_factory=list)
     extracted_from_chunks: int = 0
-
 
 @dataclass
 class RetrievalMetrics:
@@ -434,7 +432,7 @@ class FastReranker:
 
 
 # ----------------------------------------------------------------------
-# HybridRetriever (MODIFICADO: Lógica de Filtro de Contexto a Metadatos)
+# HybridRetriever MODIFICADO: Lógica de Filtro de Contexto a Metadatos
 # ----------------------------------------------------------------------
 class HybridRetriever:
     """Sistema de recuperación híbrido."""
@@ -510,9 +508,7 @@ class HybridRetriever:
         
         context_lower = context_product.lower()
         query_lower = query.lower()
-        
-        # Heurística de cambio de producto: Si la query menciona un producto diferente 
-        # (ej: uretano vs epóxico), se ignora el contexto anterior para el filtro.
+
         if ('uretano' in query_lower and 'epoxico' in context_lower) or \
            ('epoxico' in query_lower and 'uretano' in context_lower):
             return None
@@ -524,10 +520,7 @@ class HybridRetriever:
         producto: Optional[str],
         section_filter: Optional[Dict]
     ) -> Tuple[Optional[Dict], Optional[Dict]]:
-        """
-        MODIFICADO: Construye un filtro ESTRICTO de producto para 'where' (metadatos)
-        y DESACTIVA el filtro sobre el texto (where_document).
-        """
+
         # Inicializamos el filtro de metadatos con el filtro de sección (que es None)
         where_metadata = section_filter 
         where_document = None # Desactivamos el filtro sobre el texto
@@ -553,6 +546,7 @@ class HybridRetriever:
         where_metadata: Optional[Dict],
         where_document: Optional[Dict] = None
     ) -> List[SearchResult]:
+        
         """
         Busca en la colección usando los filtros de metadatos (where) y de texto (where_document).
         """
@@ -622,7 +616,6 @@ def main():
     """Sistema RAG con contexto y extracción de metadata (código omitido por brevedad, es el mismo)."""
     from config import ProjectConfig
     
-    # Simulación de la clase ProjectConfig para que el código sea ejecutable 
     @dataclass
     class MockProjectConfig:
         def get_folder(self, name: str) -> Path:
