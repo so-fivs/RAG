@@ -15,7 +15,15 @@ from typing import List, Dict, Any, Optional, Tuple
 from dataclasses import dataclass, field
 import time
 import ast
+import warnings
+import logging
 
+warnings.filterwarnings("ignore")
+warnings.filterwarnings("ignore", message="Add of existing embedding ID")
+logging.getLogger('chromadb').setLevel(logging.ERROR)
+logging.getLogger('chromadb.db.impl.sqlite').setLevel(logging.ERROR)
+warnings.filterwarnings("ignore")
+warnings.filterwarnings("ignore", message="capture() takes 1 positional argument")
 
 @dataclass
 class SearchResult:
@@ -26,7 +34,13 @@ class SearchResult:
     similarity: float
     tipo_contenido: str
     source_type: str = "semantic"
-
+@dataclass
+class RetrievalMetrics:
+    """Métricas simplificadas de recuperación."""
+    avg_similarity: float
+    top_similarity: float
+    latency_ms: float
+    total_chunks: int
 
 @dataclass
 class StructuredMetadata:
@@ -39,90 +53,151 @@ class StructuredMetadata:
 
 
 @dataclass
-class RetrievalMetrics:
-    """Métricas simplificadas de recuperación."""
-    avg_similarity: float
-    top_similarity: float
-    latency_ms: float
-    total_chunks: int
-
-
-# ----------------------------------------------------------------------
-# MetadataParser - NUEVO: Convierte strings a estructuras
-# ----------------------------------------------------------------------
 class MetadataParser:
     """Parsea metadatos que están en formato string."""
     
     @staticmethod
     def parse_codigos_h(codigos_str: str) -> List[Dict[str, str]]:
         """
-        Parsea códigos H desde string "H315,H319,H317,H225".
+        Parsea códigos H desde string.
+        CASOS SOPORTADOS:
+        - "H315,H319,H317,H225"
+        - "{'codigo': 'H226', 'descripcion': '...'}"
+        - "[{'codigo': 'H226'}, {'codigo': 'H304'}]"
         """
         if not codigos_str or codigos_str == '':
             return []
         
         codigos = []
-        for codigo in codigos_str.split(','):
-            codigo = codigo.strip()
-            if codigo:
+        
+        # CASO 1: String simple "H315,H319,H317"
+        if '{' not in codigos_str and '[' not in codigos_str:
+            for codigo in codigos_str.split(','):
+                codigo = codigo.strip()
+                if codigo and codigo.startswith('H'):
+                    codigos.append({
+                        'codigo': codigo,
+                        'descripcion': MetadataParser._get_h_description(codigo)
+                    })
+            return codigos
+        
+        # CASO 2: String con diccionarios "{'codigo': 'H226', 'descripcion': '...'}"
+        try:
+            # Limpiar y normalizar
+            clean_str = codigos_str.replace("'codigo':", '"codigo":').replace("'descripcion':", '"descripcion":')
+            clean_str = clean_str.replace("'", '"')  # Comillas simples a dobles
+            
+            # Si no está en array, convertir
+            if not clean_str.startswith('['):
+                clean_str = '[' + clean_str + ']'
+            
+            # Parsear JSON
+            import json
+            parsed = json.loads(clean_str)
+            
+            for item in parsed:
+                if isinstance(item, dict) and 'codigo' in item:
+                    codigo_id = item['codigo']
+                    if codigo_id and codigo_id.startswith('H'):
+                        codigos.append({
+                            'codigo': codigo_id,
+                            'descripcion': MetadataParser._get_h_description(codigo_id)
+                        })
+        except Exception as e:
+            print(f"  [WARN] Error parseando códigos H: {e}")
+            print(f"  [DEBUG] String recibido: {codigos_str[:200]}")
+            
+            # FALLBACK: Buscar códigos H con regex
+            import re
+            matches = re.findall(r'H\d{3}', codigos_str)
+            for codigo in set(matches):  # set() para eliminar duplicados
                 codigos.append({
                     'codigo': codigo,
                     'descripcion': MetadataParser._get_h_description(codigo)
                 })
+        
         return codigos
     
     @staticmethod
     def parse_codigos_p(codigos_str: str) -> List[Dict[str, str]]:
-        """
-        Parsea códigos P desde string "P370 + P378,P305 + P351 + P338,...".
-        """
+        """Parsea códigos P con el mismo enfoque que parse_codigos_h."""
         if not codigos_str or codigos_str == '':
             return []
         
         codigos = []
-        for codigo_group in codigos_str.split(','):
-            # Puede tener combinaciones como "P370 + P378"
-            for codigo in codigo_group.split('+'):
-                codigo = codigo.strip()
-                if codigo.startswith('P'):
-                    codigos.append({
-                        'codigo': codigo,
-                        'descripcion': MetadataParser._get_p_description(codigo)
-                    })
+        
+        # CASO 1: String simple "P370 + P378,P305 + P351 + P338"
+        if '{' not in codigos_str and '[' not in codigos_str:
+            for codigo_group in codigos_str.split(','):
+                for codigo in codigo_group.split('+'):
+                    codigo = codigo.strip()
+                    if codigo and codigo.startswith('P'):
+                        codigos.append({
+                            'codigo': codigo,
+                            'descripcion': MetadataParser._get_p_description(codigo)
+                        })
+            return codigos
+        
+        # CASO 2: Con diccionarios (mismo enfoque que códigos H)
+        try:
+            clean_str = codigos_str.replace("'codigo':", '"codigo":').replace("'descripcion':", '"descripcion":')
+            clean_str = clean_str.replace("'", '"')
+            
+            if not clean_str.startswith('['):
+                clean_str = '[' + clean_str + ']'
+            
+            import json
+            parsed = json.loads(clean_str)
+            
+            for item in parsed:
+                if isinstance(item, dict) and 'codigo' in item:
+                    codigo_id = item['codigo']
+                    if codigo_id and codigo_id.startswith('P'):
+                        codigos.append({
+                            'codigo': codigo_id,
+                            'descripcion': MetadataParser._get_p_description(codigo_id)
+                        })
+        except Exception as e:
+            # FALLBACK: Buscar códigos P con regex
+            import re
+            matches = re.findall(r'P\d{3}', codigos_str)
+            for codigo in set(matches):
+                codigos.append({
+                    'codigo': codigo,
+                    'descripcion': MetadataParser._get_p_description(codigo)
+                })
+        
         return codigos
     
     @staticmethod
     def parse_componentes_cas(componentes_str: str) -> List[Dict[str, str]]:
-        """
-        Parsea componentes desde string "{'nombre': '...', 'cas': '...'},{'nombre': '...'}".
-        """
+        """Parsea componentes CAS."""
         if not componentes_str or componentes_str == '':
             return []
         
         componentes = []
+        
         try:
-            # Dividir por "},{"
-            parts = componentes_str.split('},{')
+            # Normalizar formato
+            clean_str = componentes_str.replace("'nombre':", '"nombre":').replace("'cas':", '"cas":')
+            clean_str = clean_str.replace("'concentracion':", '"concentracion":')
+            clean_str = clean_str.replace("'", '"')
             
-            for part in parts:
-                # Limpiar y agregar llaves si faltan
-                part = part.strip()
-                if not part.startswith('{'):
-                    part = '{' + part
-                if not part.endswith('}'):
-                    part = part + '}'
-                
-                # Parsear el diccionario
-                try:
-                    comp_dict = ast.literal_eval(part)
-                    if 'nombre' in comp_dict and 'cas' in comp_dict:
-                        componentes.append({
-                            'nombre': comp_dict['nombre'],
-                            'cas': comp_dict['cas'],
-                            'concentracion': comp_dict.get('concentracion', 'No especificada')
-                        })
-                except:
-                    continue
+            if not clean_str.startswith('['):
+                # Dividir por "},{"
+                parts = clean_str.split('},{')
+                clean_str = '[' + ','.join('{' + p.strip('{}') + '}' for p in parts) + ']'
+            
+            import json
+            parsed = json.loads(clean_str)
+            
+            for item in parsed:
+                if isinstance(item, dict) and 'nombre' in item and 'cas' in item:
+                    componentes.append({
+                        'nombre': item['nombre'],
+                        'cas': item['cas'],
+                        'concentracion': item.get('concentracion', 'No especificada')
+                    })
         except Exception as e:
             print(f"  [WARN] Error parseando componentes: {e}")
         
@@ -130,12 +205,13 @@ class MetadataParser:
     
     @staticmethod
     def _get_h_description(codigo: str) -> str:
-        """Descripción básica de códigos H."""
+        """Descripción de códigos H."""
         h_descriptions = {
             'H225': 'Líquido y vapores muy inflamables',
             'H226': 'Líquidos y vapores inflamables',
             'H304': 'Puede ser mortal en caso de ingestión',
             'H315': 'Provoca irritación cutánea',
+            'H316': 'Provoca una leve irritación cutánea',
             'H317': 'Puede provocar una reacción alérgica en la piel',
             'H319': 'Provoca irritación ocular grave',
             'H335': 'Puede irritar las vías respiratorias',
@@ -147,7 +223,7 @@ class MetadataParser:
     
     @staticmethod
     def _get_p_description(codigo: str) -> str:
-        """Descripción básica de códigos P."""
+        """Descripción de códigos P."""
         p_descriptions = {
             'P210': 'Mantener alejado de fuentes de ignición',
             'P233': 'Mantener el recipiente cerrado herméticamente',
@@ -340,8 +416,7 @@ class MetadataExtractor:
                 extracted_from_chunks=len(results)
             )
         else:
-            # Para 'emergencias', 'manipulacion', 'propiedades', 'identificacion'
-            # No hay metadata estructurada específica, solo texto
+
             return StructuredMetadata(query_type=query_type)
     
     def _aggregate_codigos_h(self, results: List[SearchResult]) -> List[Dict[str, str]]:
@@ -431,7 +506,7 @@ class HybridRetriever:
         self.config = config
         self.embedding_model = embedding_model
         
-        db_path = Path('/Users/sofiavelandiasierra/Documents/rag-fichas-seguridad/data/vector_db')
+        db_path = Path('/Users/sofiavelandiasierra/Documents/RAG/RAG/data/data/vector_db')
         self.client = chromadb.PersistentClient(path=str(db_path))
         
         self.collections = {
@@ -456,12 +531,13 @@ class HybridRetriever:
                         'componentes_cas': result.metadata.get('componentes_cas', [])
                     }
             return {}
+        
     def retrieve(
         self,
         query: str,
         context_product: Optional[str] = None,
-        n_candidates: int = 50,  # ← Aumentado
-        n_final: int = 10  # ← Aumentado
+        n_candidates: int = 15, 
+        n_final: int = 10  
     ) -> Tuple[List[SearchResult], Optional[str], List[StructuredMetadata], RetrievalMetrics, Dict[str, Any], List[Dict[str, str]]]:
         """Pipeline de recuperación híbrido con multi-type y extracción de imágenes."""
         start_time = time.time()
@@ -488,10 +564,9 @@ class HybridRetriever:
         if producto_filtro:
             all_results = self._filter_by_product(all_results, producto_filtro)
         
-        # ✅ 4.5 NUEVO: Dar BOOST a chunks de tipo 'imagen' (DESPUÉS de crear all_results)
         for result in all_results:
             if result.tipo_contenido == 'imagen':
-                result.similarity *= 1.3  # Boost 30% a imágenes
+                result.similarity *= 1.3 
                 print(f"  [BOOST IMAGEN] {result.metadata.get('imagen_nombre', 'N/A')}: {result.similarity:.3f}")
         
         # 5. Ordenar y seleccionar top-N
@@ -573,70 +648,32 @@ class HybridRetriever:
         return search_results
     
     def _extract_images_from_results(self, results: List[SearchResult]) -> List[Dict[str, str]]:
-        """Extrae imágenes usando archivos reales del disco."""
-        from pathlib import Path
-        
+        """Extrae imágenes directamente de los metadatos de chunks tipo 'imagen'."""
         images = []
-        images_path = Path('/Users/sofiavelandiasierra/Documents/rag-fichas-seguridad/data/extracted_content/images')
         
-        imagen_chunks = [r for r in results if r.tipo_contenido == 'imagen']
-        print(f"\n  [DEBUG IMÁGENES] Total results: {len(results)}, Chunks imagen: {len(imagen_chunks)}")
-        
-        # Crear un mapping de códigos de producto a archivos reales
-        product_images = {}
-        for img_file in images_path.glob('*'):
-            if img_file.suffix.lower() in ['.png', '.jpg', '.jpeg']:
-                # Extraer código de producto del nombre del archivo
-                # Ejemplo: "FDS 21 - Esmalte_Uretano_AR_p9_img0.jpeg"
-                # o "FDS_24_Epoxi_p2_img1.png"
-                for result in results:
-                    if result.tipo_contenido == 'imagen':
-                        codigo = result.metadata.get('codigo_producto', '')
-                        producto = result.metadata.get('producto', '')
-                        
-                        # Buscar coincidencia en el nombre del archivo
-                        if codigo and codigo in img_file.name:
-                            if codigo not in product_images:
-                                product_images[codigo] = []
-                            product_images[codigo].append(img_file.name)
-        
-        # Asignar imágenes a chunks
         for result in results:
+            # Solo procesar chunks de tipo imagen
             if result.tipo_contenido != 'imagen':
                 continue
             
-            codigo = result.metadata.get('codigo_producto', '')
-            chunk_index = result.metadata.get('chunk_index', 0)
+            # Extraer nombre de imagen del metadata (ya viene de ChromaDB)
+            imagen_nombre = result.metadata.get('imagen_nombre', '')
             
-            # Buscar archivo que coincida
-            filename = None
+            if not imagen_nombre:
+                print(f"  [WARN] Chunk imagen sin 'imagen_nombre': {result.chunk_id}")
+                continue
             
-            if codigo in product_images:
-                # Tomar la primera imagen disponible para ese producto
-                if product_images[codigo]:
-                    filename = product_images[codigo][0]
-                    # Remover para evitar duplicados en próximos chunks
-                    product_images[codigo].pop(0)
+            images.append({
+                'filename': imagen_nombre,
+                'similarity': round(result.similarity, 3),
+                'producto': result.metadata.get('producto', 'N/A'),
+                'tipo': 'imagen',
+                'chunk_id': result.chunk_id
+            })
             
-            # Fallback: buscar por patrón genérico
-            if not filename:
-                matching = list(images_path.glob(f"*{codigo}*")) + \
-                        list(images_path.glob(f"*img*.png")) + \
-                        list(images_path.glob(f"*img*.jpg"))
-                
-                if matching:
-                    filename = matching[0].name
-            
-            if filename:
-                images.append({
-                    'filename': filename,
-                    'similarity': round(result.similarity, 3),
-                    'producto': result.metadata.get('producto', 'N/A'),
-                    'tipo': 'imagen',
-                    'chunk_id': result.chunk_id
-                })
-                print(f"  [IMAGEN] {filename} (sim={result.similarity:.3f})")
+            print(f"  [✓ IMAGEN] {imagen_nombre} (sim={result.similarity:.3f})")
         
+        print(f"  [RESUMEN] {len(images)} imágenes extraídas")
         return images
     
     def _extract_product_from_query(self, query: str) -> Optional[str]:
@@ -762,7 +799,7 @@ def main():
         results, detected_product, structured_metadatas, metrics, product_info, images = retriever.retrieve(
             query_enriched,
             context_product=context.current_product,
-            n_candidates=30,
+            n_candidates=15,
             n_final=5
         )
         

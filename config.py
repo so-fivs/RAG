@@ -6,6 +6,8 @@ class ProjectConfig:
     
     def __init__(self, base_path: str = None):
         self.base_path = Path(base_path) if base_path else Path.cwd()
+        self.GEMINI_API_KEY = "AIzaSyAd_sMLJqVm4yKDxBVsZQDHQ0hMoTFKrt0" 
+
         
         # Estructura de carpetas CORREGIDA
         self.folders = {
@@ -14,7 +16,7 @@ class ProjectConfig:
             'extracted_content': self.base_path / 'data' / 'extracted_content',
             'processed_chunks': self.base_path / 'data' / 'processed_chunks',
             'embeddings': self.base_path / 'data' / 'embeddings',
-            'vector_db': self.base_path / 'data' / 'vector_db',
+            'vector_db': self.base_path / 'data' / 'data' / 'vector_db',
             'logs': self.base_path / 'logs',
             'outputs': self.base_path / 'outputs'
         }
@@ -79,7 +81,7 @@ if __name__ == "__main__":
     # Prueba la configuración
     config = ProjectConfig()
     config.print_structure()
-    
+
     # Crear carpetas
     respuesta = input("\n¿Crear estructura de carpetas? (s/n): ")
     if respuesta.lower() == 's':

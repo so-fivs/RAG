@@ -1,9 +1,5 @@
 """
-src/rag/generator.py
-
-Sistema RAG + LLM Generator SIMPLIFICADO
-Integra retriever + LLM + contexto todo en uno.
-VERSIÓN CORREGIDA CON API ANTIGUA (ESTABLE)
+src/rag/generator.py 
 """
 
 import ollama
@@ -11,15 +7,10 @@ import time
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
 from pathlib import Path
-from google.genai import types
-import google.genai as genai  
 from config import ProjectConfig
 import sys
-
-HarmCategory = types.HarmCategory
-HarmBlockThreshold = types.HarmBlockThreshold
-SafetySetting = types.SafetySetting
-GenerationConfig = types.GenerateContentConfig
+import warnings
+warnings.filterwarnings("ignore", message="Add of existing embedding ID")
 try:
     from .retriever import (
         HybridRetriever, 
@@ -37,24 +28,29 @@ except ImportError:
         StructuredMetadata
     )
 
+
 @dataclass
 class GeneratedResponse:
     """Respuesta generada por el sistema."""
     answer: str
     sources: List[Dict[str, Any]]
+    fds_reference: Optional[Dict[str, str]]  # ← NUEVO CAMPO
     structured_metadata: Optional[Dict[str, Any]]
     pictogramas: List[str]
     latency_ms: float
     retrieval_metrics: Dict[str, Any]
 
-
 class RAGGenerator:
-    """Generador de respuestas RAG con LLM (TODO EN UNO)."""
+    """Generador RAG optimizado con modelo liviano."""
     
-    def __init__(self, config, use_gemini: bool = True, temperature: float = 0.3):  
+    def __init__(self, config, use_gemini: bool = False, temperature: float = 0.3):  
         self.config = config
         self.temperature = temperature
-        self.use_gemini = use_gemini
+        self.use_gemini = False
+        
+        # ✅ CAMBIO 1: Usar Qwen 1.5B (mucho más rápido)
+        self.llm_model = "qwen2.5:1.5b"  # Antes: llama3.1:8b
+        
         self.pictograma_mapping = {
             'H225': 'flame',
             'H226': 'flame',
@@ -68,34 +64,21 @@ class RAGGenerator:
             'H412': 'environment'
         }
         
-        # INICIALIZAR RETRIEVER PRIMERO
         try:
             self.retriever = HybridRetriever(config)
             self.context = ConversationalContext()
-            print("Retriever y contexto inicializados")
+            print("✅ Retriever y contexto inicializados")
         except Exception as e:
-            print(f"Error inicializando retriever: {e}")
+            print(f"❌ Error inicializando retriever: {e}")
             raise
         
-        if use_gemini:
-            try:
-                print(f"Configurando Gemini API...")
-                self.client = genai.Client(api_key=config.GEMINI_API_KEY)
-                self.model_name = 'gemini-2.5-flash'
-                self.client.models.generate_content(
-                    model=self.model_name,
-                    contents="Test"
-                )
-                print(f"✅ Gemini inicializado: {self.model_name}")
-                                    
-            except Exception as e:
-                print(f"⚠️ Error Gemini, usando Ollama: {e}")
-                self.use_gemini = False
-                self.llm_model = "llama3.1:8b"
-                print(f"🔄 Fallback a Ollama: {self.llm_model}")
-        else:
-            self.llm_model = "llama3.1:8b"
-            print(f"🔄 Usando Ollama: {self.llm_model}")
+        print(f"🚀 Usando modelo OPTIMIZADO: {self.llm_model}")
+        try:
+            ollama.list()
+            print("✅ Ollama verificado")
+        except Exception as e:
+            print(f"❌ ERROR: Ollama no disponible. Ejecuta: ollama serve")
+            raise
 
     def generate_response(self, query: str, use_context: bool = True) -> GeneratedResponse:
         start_time = time.time()
@@ -111,21 +94,35 @@ class RAGGenerator:
             if detected_product and use_context:
                 self.context.set_product(detected_product)
             
-            prompt = self._build_prompt(query, results, structured_metadatas, product_info)
+            metadata_dict = self._format_metadata_deduplicated(structured_metadatas) 
+            prompt = self._build_prompt(query, results, metadata_dict, product_info)
             llm_response = self._call_llm(prompt)
-            pictogramas = self._extract_pictogramas(structured_metadatas)
+            
+            # Extraer referencia FDS explícita
+            fds_reference = None
+            if detected_product:
+                fds_reference = {
+                    'producto': detected_product,
+                    'fabricante': product_info.get('fabricante', 'N/A'),
+                    'codigo': product_info.get('codigo_producto', 'N/A'),
+                    'fecha': product_info.get('fecha_fds', 'N/A')
+                }
+                print(f"  [FDS REFERENCE] {fds_reference}")
+            
+            pictogramas_unicos = self._extract_pictogramas(structured_metadatas)
+            imagenes_unicas = list({img['filename'] for img in images})
+            combined_images = list(set(pictogramas_unicos + imagenes_unicas))
+            print(f"  [IMÁGENES FINALES] {len(combined_images)} únicas: {combined_images}")
+            
             sources = self._format_sources(results)
-            metadata_dict = self._format_metadata(structured_metadatas)
-            
             latency = (time.time() - start_time) * 1000
-            all_images = pictogramas + [img['filename'] for img in images]
-            all_images = list(set(all_images))
-            
+
             return GeneratedResponse(
                 answer=llm_response,
                 sources=sources,
+                fds_reference=fds_reference,
                 structured_metadata=metadata_dict,
-                pictogramas=all_images,
+                pictogramas=combined_images,
                 latency_ms=latency,
                 retrieval_metrics={
                     'avg_similarity': metrics.avg_similarity,
@@ -134,173 +131,152 @@ class RAGGenerator:
                 }
             )
         except Exception as e:
-            print(f"Error: {e}")
+            print(f"❌ Error: {e}")
             raise
 
     def _build_prompt(self, query: str, results: List[SearchResult], 
-                      structured_metadatas: List[StructuredMetadata], 
-                      product_info: Dict[str, Any]) -> str:
+                structured_metadata_dict: Optional[Dict[str, Any]], 
+                product_info: Dict[str, Any]) -> str:
+        """Prompt optimizado para respuestas completas y detalladas."""
+        
+        producto_nombre = product_info.get('producto', 'N/A')
+        fabricante = product_info.get('fabricante', 'N/A')
+        codigo = product_info.get('codigo_producto', 'N/A')
+        fecha_fds = product_info.get('fecha_fds', 'N/A')
         prompt = f"""Eres un experto en seguridad química especializado en Fichas de Datos de Seguridad (FDS).
 
-{'='*60}
-INFORMACION DEL PRODUCTO
-{'='*60}
-Producto: {product_info.get('producto', 'N/A')}
-Fabricante: {product_info.get('fabricante', 'N/A')}
-Codigo: {product_info.get('codigo_producto', 'N/A')}
-Fecha FDS: {product_info.get('fecha_fds', 'N/A')}
+    {'='*60}
+    INFORMACIÓN DEL PRODUCTO
+    {'='*60}
+Producto: {producto_nombre}
+Fabricante: {fabricante}
+Código del Producto: {codigo}
+Fecha de Emisión FDS: {fecha_fds}
 
-Codigos H identificados: {len(product_info.get('codigos_h', []))}
-Codigos P identificados: {len(product_info.get('codigos_p', []))}
-Componentes quimicos: {len(product_info.get('componentes_cas', []))}
+    PREGUNTA: {query}
 
-PREGUNTA: {query}
-
-"""
+    """
         
-        for metadata in structured_metadatas:
-            if metadata.codigos_h:
-                prompt += f"\nCODIGOS DE PELIGRO:\n"
-                for codigo in metadata.codigos_h:
+        if structured_metadata_dict:
+            
+            # Agregar códigos H/P y componentes
+            if structured_metadata_dict.get('codigos_h'):
+                prompt += "\nCÓDIGOS DE PELIGRO (H):\n"
+                for codigo in structured_metadata_dict['codigos_h']:
                     prompt += f"- {codigo['codigo']}: {codigo['descripcion']}\n"
             
-            if metadata.codigos_p:
-                prompt += f"\nMEDIDAS DE PRECAUCION:\n"
-                for codigo in metadata.codigos_p:
+            if structured_metadata_dict.get('codigos_p'):
+                prompt += "\nMEDIDAS DE PRECAUCIÓN (P):\n"
+                for codigo in structured_metadata_dict['codigos_p']:
                     prompt += f"- {codigo['codigo']}: {codigo['descripcion']}\n"
             
-            if metadata.componentes_cas:
-                prompt += f"\nCOMPONENTES QUIMICOS:\n"
-                for comp in metadata.componentes_cas:
-                    conc = f" ({comp.get('concentracion', '')})" if comp.get('concentracion') != 'No especificada' else ""
-                    prompt += f"- {comp['nombre']} - CAS: {comp['cas']}{conc}\n"
-        
+            if structured_metadata_dict.get('componentes_cas'):
+                prompt += "\nCOMPONENTES QUÍMICOS:\n"
+                for comp in structured_metadata_dict['componentes_cas']:
+                    # Asegurarse de que 'concentracion' esté disponible
+                    conc = comp.get('concentracion', 'No especificada')
+                    conc_str = f" ({conc})" if conc != 'No especificada' else ""
+                    prompt += f"- {comp['nombre']} - CAS: {comp['cas']}{conc_str}\n"
+
+        prompt += "\nCONTEXTO DE LA FDS:\n"
         prompt += "\nCONTEXTO DE LA FDS:\n"
         for i, result in enumerate(results[:5], 1):
             prompt += f"\n[Fragmento {i}]\n{result.content[:800]}\n"
         
         prompt += """
 
-INSTRUCCIONES:
-1. Proporciona una respuesta COMPLETA y DETALLADA (minimo 3 parrafos bien desarrollados)
-2. Estructura: Introduccion y uso del producto -> Detalles tecnicos -> Recomendaciones practicas pero no pongas los titulos explicitamente
-3. USA los codigos H/P y componentes CAS de manera implicitos en la respuesta, no digas los codigos sino solo la mencion
-4. Si la informacion es insuficiente, especifica QUE datos faltan exactamente
-5. Lenguaje tecnico pero accesible, sin jerga innecesaria
-6. Para informacion sobre precauciones revisa controles de exposición/protección individual tambien.
-7. No incuir informacion de otros productos o documentos si no encuentras directamente la respuesta.
-RESPUESTA DETALLADA:
-"""
-        return prompt
-    
+    INSTRUCCIONES:
+    0. Inicia mencionando: "El {producto_nombre} fabricado por {fabricante} (Código: {codigo}, FDS vigente desde {fecha_fds})..." y esta información debe aparecer naturalmente en el primer párrafo
+    1. Proporciona una respuesta COMPLETA y DETALLADA (mínimo 3 párrafos bien desarrollados)
+    2. Estructura tu respuesta con: introducción y uso del producto → detalles técnicos → recomendaciones prácticas (sin títulos explícitos)
+    3. Integra los códigos H/P y componentes CAS de manera natural en el texto, sin mencionar explícitamente los códigos y parafrasea los
+    4. Si la información es insuficiente, especifica QUÉ datos faltan exactamente
+    5. Usa lenguaje técnico pero accesible, sin jerga innecesaria
+    6. Para información sobre precauciones, revisa también la sección de controles de exposición/protección individual
+    7. No incluyas información de otros productos o documentos si no la encuentras directamente
+    8. IMPORTANTE: Responde en texto plano sin formato Markdown, sin asteriscos, negritas ni listas numeradas
 
-    def _call_llm(self, prompt: str) -> str:
-        if self.use_gemini:
-            try:
-                response = self.client.models.generate_content(
-                    model=self.model_name,
-                    contents=prompt,
-                    config=GenerationConfig(
-                        temperature=self.temperature,
-                        max_output_tokens=800
-                    ), 
-                )
-                
-                if response.text is None:
-                    print("⚠️ ALERTA: Respuesta bloqueada por política de seguridad de Gemini (response.text es None).")
-                    raise ValueError("Respuesta bloqueada, forzando fallback.")
-                return response.text
-            
-            except Exception as e:
-                print(f"⚠️ Error en Gemini, fallback a Ollama: {e}")
-                self.use_gemini = False
-                self.llm_model = "llama3.1:8b"
-                return self._call_llm(prompt)
-        else:
-            try:
-                print(f"  [OLLAMA] Generando con {self.llm_model}...")
-                
-                # ✅ Verificar que Ollama está corriendo
-                import subprocess
-                try:
-                    subprocess.run(['ollama', 'list'], 
-                                capture_output=True, 
-                                timeout=5, 
-                                check=True)
-                except:
-                    return "Error: Ollama no está corriendo. Ejecuta: ollama serve"
-                
-                # ✅ Generar con timeout
-                response = ollama.generate(
-                    model=self.llm_model,
-                    prompt=prompt,
-                    options={
-                        'temperature': self.temperature, 
-                        'num_predict': 800,
-                        'num_ctx': 4096  # ← Contexto reducido
-                    }
-                )
-                
-                # ✅ Verificar respuesta
-                if not response or 'response' not in response:
-                    return "Error: Ollama no devolvió respuesta válida"
-                
-                if len(response['response'].strip()) < 50:
-                    return "Error: Respuesta de Ollama demasiado corta"
-                
-                print(f"  [OLLAMA] Respuesta generada: {len(response['response'])} chars")
-                return response['response']
-                
-            except Exception as e:
-                print(f"  [OLLAMA ERROR] {e}")
-                return f"Error en Ollama: {str(e)}"
-    
-    def _extract_pictogramas(self, structured_metadatas: List[StructuredMetadata]) -> List[str]:
-        """
-        Extrae pictogramas de peligro basándose en códigos H.
+    RESPUESTA DETALLADA:
+    """
+        return prompt
         
-        Flujo:
-        1. Recibe lista de metadatas estructuradas
-        2. Por cada metadata, itera sus códigos H
-        3. Mapea código H → nombre de pictograma (ej: H225 → 'flame')
-        4. Busca archivos en disco que contengan ese nombre
-        5. Retorna lista de nombres de archivos únicos
-        """
+    def _call_llm(self, prompt: str) -> str:
+        """Llamada al LLM."""
+        try:
+            print(f"  [QWEN] Generando respuesta...")
+            
+            response = ollama.generate(
+                model=self.llm_model,
+                prompt=prompt,
+                options={
+                    'temperature': self.temperature,
+                    'num_predict': 300,
+                    'top_p': 0.9,
+                    'num_ctx': 4096
+                }
+            )
+            
+            if not response or 'response' not in response:
+                return "Error: Ollama no devolvió respuesta válida"
+            
+            # Limpiar markdown agresivamente
+            import re
+            text = response['response']
+            text = re.sub(r'\*\*(.+?)\*\*', r'\1', text)  # **bold**
+            text = re.sub(r'\*(.+?)\*', r'\1', text)      # *italic*
+            text = re.sub(r'#+\s*', '', text)             # ### headers
+            text = re.sub(r'^-\s+', '', text, flags=re.MULTILINE)  # - listas
+            text = re.sub(r'^\d+\.\s+', '', text, flags=re.MULTILINE)  # 1. listas
+            
+            if len(text.strip()) < 50:
+                return "Error: La base de datos no tiene información suficiente."
+            
+            print(f"  [QWEN] ✅ Respuesta limpia: {len(text)} chars")
+            return text
+            
+        except Exception as e:
+            print(f"  [QWEN ERROR] {e}")
+            return f"Error: {str(e)}"
+
+    def _extract_pictogramas(self, structured_metadatas: List[StructuredMetadata]) -> List[str]:
+        """Extrae pictogramas únicos."""
         if not structured_metadatas: 
             return []
         
         pictogramas = set()
         
         try:
-            images_path = Path('/Users/sofiavelandiasierra/Documents/rag-fichas-seguridad/data/extracted_content/images')
+            images_path = Path('/Users/sofiavelandiasierra/Documents/RAG/RAG/data/extracted_content/images')
             
             if not images_path.exists():
-                print(f"Carpeta de imagenes no encontrada: {images_path}")
+                print(f"⚠️ Carpeta de imágenes no encontrada: {images_path}")
                 return []
             
             for metadata in structured_metadatas:
                 if not metadata.codigos_h:  
                     continue
                 
-                for codigo in metadata.codigos_h:  
-                    codigo_id = codigo.get('codigo', '')  
+                for codigo in metadata.codigos_h:
+                    codigo_id = codigo.get('codigo', '')
                     
                     if codigo_id in self.pictograma_mapping:
                         base_name = self.pictograma_mapping[codigo_id]
-      
-                        matching_files = list(images_path.glob(f"*{base_name}*.png")) + \
-                                        list(images_path.glob(f"*{base_name}*.jpg")) + \
-                                        list(images_path.glob(f"*{base_name}*.jpeg"))
+                        
+                        matching_files = (
+                            list(images_path.glob(f"*{base_name}*.png")) + 
+                            list(images_path.glob(f"*{base_name}*.jpg"))
+                        )
                         
                         if matching_files:
                             pictogramas.add(matching_files[0].name)
             
         except Exception as e:
-            print(f"Error extrayendo pictogramas: {e}")
+            print(f"❌ Error extrayendo pictogramas: {e}")
         
         return list(pictogramas)
     
     def _format_sources(self, results: List[SearchResult]) -> List[Dict[str, Any]]:
+        """Formatea fuentes para respuesta."""
         sources = []
         for result in results:
             sources.append({
@@ -313,62 +289,82 @@ RESPUESTA DETALLADA:
             })
         return sources
     
-    def _format_metadata(self, structured_metadatas: List[StructuredMetadata]) -> Optional[Dict[str, Any]]:
+    # ✅ CAMBIO 3: Nueva función de deduplicación
+    def _format_metadata_deduplicated(self, structured_metadatas: List[StructuredMetadata]) -> Optional[Dict[str, Any]]:
+        """
+        Formatea metadata eliminando duplicados por código único.
+        
+        ANTES: ['H225', 'H315', 'H225', 'H315'] (duplicados)
+        AHORA: ['H225', 'H315'] (únicos)
+        """
         if not structured_metadatas:
             return None
         
-        all_codigos_h = []
-        all_codigos_p = []
-        all_componentes_cas = []
+        # Diccionarios para deduplicar (clave = código)
+        codigos_h_dict = {}
+        codigos_p_dict = {}
+        componentes_cas_dict = {}
         query_types = []
         total_chunks = 0
         
         for metadata in structured_metadatas:
             query_types.append(metadata.query_type)
-            all_codigos_h.extend(metadata.codigos_h)
-            all_codigos_p.extend(metadata.codigos_p)
-            all_componentes_cas.extend(metadata.componentes_cas)
             total_chunks += metadata.extracted_from_chunks
+            
+            # Agregar códigos H únicos
+            for codigo in metadata.codigos_h:
+                codigo_id = codigo.get('codigo')
+                if codigo_id and codigo_id not in codigos_h_dict:
+                    codigos_h_dict[codigo_id] = codigo
+            
+            # Agregar códigos P únicos
+            for codigo in metadata.codigos_p:
+                codigo_id = codigo.get('codigo')
+                if codigo_id and codigo_id not in codigos_p_dict:
+                    codigos_p_dict[codigo_id] = codigo
+            
+            # Agregar componentes CAS únicos
+            for comp in metadata.componentes_cas:
+                cas_id = comp.get('cas')
+                if cas_id and cas_id not in componentes_cas_dict:
+                    componentes_cas_dict[cas_id] = comp
         
-        # Eliminar duplicados manteniendo orden
-        unique_h = {c['codigo']: c for c in all_codigos_h}.values()
-        unique_p = {c['codigo']: c for c in all_codigos_p}.values()
-        unique_cas = {c['cas']: c for c in all_componentes_cas}.values()
-        
+        # Convertir a listas ordenadas
         return {
             'query_types': list(set(query_types)),
-            'codigos_h': list(unique_h),
-            'codigos_p': list(unique_p),
-            'componentes_cas': list(unique_cas),
+            'codigos_h': sorted(codigos_h_dict.values(), key=lambda x: x['codigo']),
+            'codigos_p': sorted(codigos_p_dict.values(), key=lambda x: x['codigo']),
+            'componentes_cas': sorted(componentes_cas_dict.values(), key=lambda x: x.get('nombre', '')),
             'extracted_from_chunks': total_chunks
-        }    
+        }
     
     def reset_context(self):
+        """Reinicia contexto conversacional."""
         self.context.clear_product()
-        print("Contexto reiniciado")
+        print("🔄 Contexto reiniciado")
 
 
 if __name__ == "__main__":
     try:
-        from config import ProjectConfig
+        from RAG.config import ProjectConfig
         
         config = ProjectConfig()
         generator = RAGGenerator(config, use_gemini=False)
         
+        # Test rápido
         query = "Cuales son los peligros del esmalte epoxico?"
-        response = generator.generate_response(query)
-        
         print(f"\n{'='*80}")
         print(f"QUERY: {query}")
         print(f"{'='*80}")
+        
+        response = generator.generate_response(query)
+        
         print(f"\nRESPUESTA:\n{response.answer}")
         print(f"\nPICTOGRAMAS: {response.pictogramas}")
+        print(f"CÓDIGOS H: {[c['codigo'] for c in response.structured_metadata.get('codigos_h', [])]}")
         print(f"LATENCIA: {response.latency_ms:.0f}ms")
-        print(f"\nFUENTES:")
-        for i, source in enumerate(response.sources[:3], 1):
-            print(f"  {i}. {source['producto']} (sim={source['similarity']})")
     
     except Exception as e:
-        print(f"\nERROR: {e}")
+        print(f"\n❌ ERROR: {e}")
         import traceback
         traceback.print_exc()

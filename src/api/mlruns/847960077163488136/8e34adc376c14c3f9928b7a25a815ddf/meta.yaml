@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/sofiavelandiasierra/Documents/RAG/RAG/src/api/mlruns/847960077163488136/8e34adc376c14c3f9928b7a25a815ddf/artifacts
+end_time: 1764129503031
+entry_point_name: ''
+experiment_id: '847960077163488136'
+lifecycle_stage: active
+run_id: 8e34adc376c14c3f9928b7a25a815ddf
+run_name: query_1764129333
+run_uuid: 8e34adc376c14c3f9928b7a25a815ddf
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1764129502988
+status: 3
+tags: []
+user_id: sofiavelandiasierra
