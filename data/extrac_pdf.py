@@ -10,20 +10,13 @@ import pdfplumber
 from pathlib import Path
 from typing import List
 import hashlib
+import config as ProjectConfig
 
 
 
 # ============================================================================
 # CONFIGURACIÓN Y LIMPIEZA
 # ============================================================================
-
-def cargar_config(ruta_config: str = "/Users/sofiavelandiasierra/Documents/rag-fichas-seguridad/config.py"):
-    import importlib.util
-    spec = importlib.util.spec_from_file_location("config", ruta_config)
-    config_module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(config_module)
-    return config_module.ProjectConfig()
-
 
 def limpiar_carpetas_salida(config):
     """Elimina todo el contenido de las carpetas de salida."""
@@ -404,11 +397,9 @@ def extraer_imagenes(pdf_path: str, config, nombre_base: str) -> int:
 # PIPELINE COMPLETO
 # ============================================================================
 
-def pipeline_completo(pdf_path: str, ruta_config: str, primera_vez: bool = False):
+def pipeline_completo(pdf_path: str, config: ProjectConfig, primera_vez: bool = False):
     """Ejecuta pipeline completo de extracción."""
     nombre_base = Path(pdf_path).stem
-    config = cargar_config(ruta_config)
-    
     if primera_vez:
         config.create_folders()
         limpiar_carpetas_salida(config)
@@ -430,6 +421,9 @@ def pipeline_completo(pdf_path: str, ruta_config: str, primera_vez: bool = False
 
 if __name__ == "__main__":
     carpeta_pdfs = Path("raw_documents")
+    archivos_pdf = list(carpeta_pdfs.glob("*.pdf"))
+    config = ProjectConfig()
+    carpeta_pdfs = config.get_folder('raw_documents')
     archivos_pdf = list(carpeta_pdfs.glob("*.pdf"))
     
     if not archivos_pdf:

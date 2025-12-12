@@ -27,7 +27,10 @@ except ImportError:
         SearchResult,
         StructuredMetadata
     )
-
+config = ProjectConfig()
+db_path = config.get_folder('vector_db')
+images_path = config.get_folder('images')
+pdf_path = config.get_folder('raw_documents')
 
 @dataclass
 class GeneratedResponse:
@@ -48,9 +51,9 @@ class RAGGenerator:
         self.temperature = temperature
         self.use_gemini = False
         
-        # ✅ CAMBIO 1: Usar Qwen 1.5B (mucho más rápido)
-        self.llm_model = "qwen2.5:1.5b"  # Antes: llama3.1:8b
-        
+  
+        self.llm_model = "qwen2.5:1.5b" 
+        #tinydolphin
         self.pictograma_mapping = {
             'H225': 'flame',
             'H226': 'flame',
@@ -104,7 +107,7 @@ class RAGGenerator:
                 fds_reference = {
                     'producto': detected_product,
                     'fabricante': product_info.get('fabricante', 'N/A'),
-                    'codigo': product_info.get('codigo_producto', 'N/A'),
+                    'codigo': detected_product,  
                     'fecha': product_info.get('fecha_fds', 'N/A')
                 }
                 print(f"  [FDS REFERENCE] {fds_reference}")
@@ -187,9 +190,9 @@ Fecha de Emisión FDS: {fecha_fds}
 
     INSTRUCCIONES:
     0. Inicia mencionando: "El {producto_nombre} fabricado por {fabricante} (Código: {codigo}, FDS vigente desde {fecha_fds})..." y esta información debe aparecer naturalmente en el primer párrafo
-    1. Proporciona una respuesta COMPLETA y DETALLADA (mínimo 3 párrafos bien desarrollados)
-    2. Estructura tu respuesta con: introducción y uso del producto → detalles técnicos → recomendaciones prácticas (sin títulos explícitos)
-    3. Integra los códigos H/P y componentes CAS de manera natural en el texto, sin mencionar explícitamente los códigos y parafrasea los
+    1. Proporciona una respuesta COMPLETA CONCISA
+    2. Estructura tu respuesta con: introducción y uso del producto → detalles técnicos correspondientes a la pregunta → recomendaciones prácticas (sin títulos explícitos)
+    3. Integra los códigos H/P y componentes CAS de manera natural en el texto, sin mencionar explícitamente los códigos sino parafraseados 
     4. Si la información es insuficiente, especifica QUÉ datos faltan exactamente
     5. Usa lenguaje técnico pero accesible, sin jerga innecesaria
     6. Para información sobre precauciones, revisa también la sección de controles de exposición/protección individual
@@ -210,7 +213,7 @@ Fecha de Emisión FDS: {fecha_fds}
                 prompt=prompt,
                 options={
                     'temperature': self.temperature,
-                    'num_predict': 300,
+                    'num_predict': 500,
                     'top_p': 0.9,
                     'num_ctx': 4096
                 }
@@ -245,9 +248,7 @@ Fecha de Emisión FDS: {fecha_fds}
         
         pictogramas = set()
         
-        try:
-            images_path = Path('/Users/sofiavelandiasierra/Documents/RAG/RAG/data/extracted_content/images')
-            
+        try:            
             if not images_path.exists():
                 print(f"⚠️ Carpeta de imágenes no encontrada: {images_path}")
                 return []

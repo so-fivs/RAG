@@ -1,99 +1,56 @@
 # ============================================================================
-# REQUIREMENTS.TXT - Sistema RAG para Fichas de Datos de Seguridad
+# REQUIREMENTS.TXT - Sistema RAG FDS
 # ============================================================================
 
-# ────────────────────────────────────────────────────────────────────────────
-# CORE FRAMEWORK
-# ────────────────────────────────────────────────────────────────────────────
-fastapi==0.104.1              # Framework web para API REST
-uvicorn[standard]==0.24.0     # Servidor ASGI para FastAPI
-pydantic==2.5.0               # Validación de datos
-python-multipart==0.0.6       # Para manejo de forms/uploads
-jinja2==3.1.2                 # Motor de templates (para index.html)
+# ===== RAG CORE =====
+chromadb==0.4.18
+chroma-hnswlib==0.7.3
+ollama==0.1.6
 
-# ────────────────────────────────────────────────────────────────────────────
-# LLM & EMBEDDINGS
-# ────────────────────────────────────────────────────────────────────────────
-ollama==0.1.6                 # Cliente Python para Ollama
-# NOTA: Ollama debe instalarse aparte: https://ollama.com
+# ===== API BACKEND =====
+fastapi==0.104.1
+uvicorn==0.24.0
+uvicorn[standard]  # Incluye uvloop, httptools, websockets
+pydantic==2.5.0
+pydantic_core==2.14.1
+python-multipart==0.0.6
+starlette==0.27.0
 
-# ────────────────────────────────────────────────────────────────────────────
-# VECTOR DATABASE
-# ────────────────────────────────────────────────────────────────────────────
-chromadb==0.4.18              # Base de datos vectorial
-# Dependencias de ChromaDB ya incluidas
+# ===== PDF PROCESSING =====
+# PyMuPDF (fitz)
+PyMuPDF==1.23.8
+PyPDF2==3.0.1
+pdfplumber==0.10.3
+pdfminer.six==20221105
+pypdfium2==5.1.0
 
-# ────────────────────────────────────────────────────────────────────────────
-# DATA PROCESSING & ANALYSIS
-# ────────────────────────────────────────────────────────────────────────────
-pandas==2.1.3                 # Manipulación de datos tabulares
-numpy==1.26.2                 # Operaciones numéricas
-openpyxl==3.1.2              # Lectura de Excel (opcional)
+# Camelot y dependencias
+camelot-py[cv]
+opencv-python  # cv2 (requerido por camelot)
+Pillow==10.1.0
 
-# ────────────────────────────────────────────────────────────────────────────
-# PDF & DOCUMENT PROCESSING
-# ────────────────────────────────────────────────────────────────────────────
-PyPDF2==3.0.1                 # Extracción básica de PDFs
-pdfplumber==0.10.3            # Extracción avanzada (tablas, texto)
-pytesseract==0.3.10           # OCR para imágenes
-Pillow==10.1.0                # Procesamiento de imágenes
+# OCR
+pytesseract==0.3.10
 
-# NOTA: Tesseract OCR debe instalarse aparte:
-# macOS: brew install tesseract
-# Ubuntu: sudo apt-get install tesseract-ocr
-# Windows: https://github.com/UB-Mannheim/tesseract/wiki
+# ===== DATA PROCESSING =====
+pandas==2.1.3
+numpy==1.26.2
+openpyxl==3.1.2
 
-# ────────────────────────────────────────────────────────────────────────────
-# UTILITIES
-# ────────────────────────────────────────────────────────────────────────────
-python-dotenv==1.0.0          # Variables de entorno (.env)
-pathlib==1.0.1                # Manipulación de rutas (incluido en Python 3.4+)
+# ===== UTILITIES =====
+python-dotenv==1.0.0
+requests==2.32.5
+PyYAML==6.0.3
 
-# ────────────────────────────────────────────────────────────────────────────
-# EXPERIMENT TRACKING (Opcional)
-# ────────────────────────────────────────────────────────────────────────────
-mlflow==2.9.2                 # Tracking de experimentos ML
-# Descomenta si quieres analytics avanzados
+# ===== MLFLOW (TRACKING) =====
+mlflow==2.9.2
+# Dependencias de MLflow ya incluidas arriba
 
-# ────────────────────────────────────────────────────────────────────────────
-# DEVELOPMENT & TESTING (Opcional)
-# ────────────────────────────────────────────────────────────────────────────
-# pytest==7.4.3               # Testing
-# httpx==0.25.2               # Cliente HTTP para tests
-# black==23.12.0              # Formateo de código
-# flake8==6.1.0               # Linting
+# ===== GOOGLE DRIVE (OPCIONAL) =====
+google-auth==2.43.0
+google-auth-oauthlib
+google-api-python-client
 
-# ────────────────────────────────────────────────────────────────────────────
-# VERSIONES DE PYTHON COMPATIBLES
-# ────────────────────────────────────────────────────────────────────────────
-# Python >= 3.9, < 3.13
-# Recomendado: Python 3.10 o 3.11
-
-# ────────────────────────────────────────────────────────────────────────────
-# INSTALACIÓN
-# ────────────────────────────────────────────────────────────────────────────
-# 1. Crear entorno virtual:
-#    python -m venv venv
-#
-# 2. Activar entorno:
-#    macOS/Linux: source venv/bin/activate
-#    Windows: venv\Scripts\activate
-#
-# 3. Instalar dependencias:
-#    pip install -r requirements.txt
-#
-# 4. Instalar Ollama por separado:
-#    https://ollama.com/download
-#
-# 5. Descargar modelos:
-#    ollama pull nomic-embed-text
-#    ollama pull qwen2.5:1.5b
-
-# ────────────────────────────────────────────────────────────────────────────
-# NOTAS IMPORTANTES
-# ────────────────────────────────────────────────────────────────────────────
-# - Ollama NO se instala con pip, descárgalo de ollama.com
-# - Tesseract OCR necesita instalación del sistema
-# - ChromaDB puede requerir build tools en algunos sistemas
-# - Si hay conflictos de versiones, prueba actualizar pip:
-#   pip install --upgrade pip setuptools wheel
+# ===== OTROS =====
+typer==0.20.0  # CLI utilities
+rich==14.2.0   # Terminal formatting

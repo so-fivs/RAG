@@ -226,4 +226,5 @@ def main():
         print("Verifica que el modelo llava:7b este instalado")
 
 
-if __name__ == "__main__"
+if __name__ == "__main__":
+     main()

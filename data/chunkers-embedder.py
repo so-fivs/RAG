@@ -12,6 +12,8 @@ from typing import List, Dict, Any, Tuple
 import hashlib
 import ollama
 from PIL import Image
+from config import ProjectConfig
+
 import pytesseract
 
 

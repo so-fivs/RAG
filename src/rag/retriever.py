@@ -505,10 +505,8 @@ class HybridRetriever:
     def __init__(self, config, embedding_model: str = "nomic-embed-text"):
         self.config = config
         self.embedding_model = embedding_model
-        
-        db_path = Path('/Users/sofiavelandiasierra/Documents/RAG/RAG/data/data/vector_db')
-        self.client = chromadb.PersistentClient(path=str(db_path))
-        
+        db_path = config.get_folder('vector_db')
+        self.client = chromadb.PersistentClient(path=str(db_path))        
         self.collections = {
             'texto': self.client.get_collection('fds_textos'),
             'tabla': self.client.get_collection('fds_tablas'),
@@ -536,7 +534,7 @@ class HybridRetriever:
         self,
         query: str,
         context_product: Optional[str] = None,
-        n_candidates: int = 15, 
+        n_candidates: int = 30, 
         n_final: int = 10  
     ) -> Tuple[List[SearchResult], Optional[str], List[StructuredMetadata], RetrievalMetrics, Dict[str, Any], List[Dict[str, str]]]:
         """Pipeline de recuperación híbrido con multi-type y extracción de imágenes."""

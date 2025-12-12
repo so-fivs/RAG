@@ -15,15 +15,14 @@ from pathlib import Path
 import mlflow
 import warnings
 warnings.filterwarnings("ignore", message="Add of existing embedding ID")
-
-# -----------------------------------------------------------------------------
-# IMPORTS DEL PROYECTO
-# -----------------------------------------------------------------------------
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
-
 from config import ProjectConfig
 from src.rag.generator import RAGGenerator
+config = ProjectConfig()
+db_path = config.get_folder('vector_db')
+images_path = config.get_folder('images')
+pdf_path = config.get_folder('raw_documents')
 
 # -----------------------------------------------------------------------------
 # MODELOS
@@ -60,16 +59,6 @@ app.add_middleware(
 )
 
 BASE_DIR = Path(__file__).parent.parent.parent
-STATIC_DIR = BASE_DIR / "static"
-TEMPLATES_DIR = BASE_DIR / "templates"
-
-# Archivos estáticos
-if STATIC_DIR.exists():
-    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
-else:
-    print(f"ADVERTENCIA: {STATIC_DIR} no existe")
-
-templates = Jinja2Templates(directory=str(TEMPLATES_DIR)) if TEMPLATES_DIR.exists() else None
 
 # -----------------------------------------------------------------------------
 # INICIALIZACIÓN GLOBAL
@@ -118,7 +107,6 @@ async def startup_event():
         print(f"Ollama OK - {len(models.get('models', []))} modelos disponibles")
 
         print("[3/3] Verificando ChromaDB...")
-        db_path = Path('/Users/sofiavelandiasierra/Documents/rag-fichas-seguridad/data/vector_db')
         if not db_path.exists():
             raise Exception(f"ChromaDB no encontrado en {db_path}")
 
@@ -332,35 +320,31 @@ async def health():
 @app.get("/api/download_pdf/{nombre_o_codigo}")
 async def download_pdf(nombre_o_codigo: str):
     try:
-        # Path donde están los PDFs originales
-        pdf_path = Path('/Users/sofiavelandiasierra/Documents/RAG/RAG/raw_documents')
-        search_term = unquote(nombre_o_codigo).strip()
-        search_term = search_term.replace('®', '').replace('™', '').replace('-', ' ').strip()
-        term_with_spaces = search_term.replace('_', ' ').strip() 
-        # Si el archivo usa underscores:
-        term_with_underscores = search_term.replace(' ', '_').strip() 
-        # Buscar PDF que contenga el código
-        matching_files = list(pdf_path.glob(f"*{search_term}*.pdf"))
-        if term_with_underscores != search_term:
-            matching_files.extend(list(pdf_path.glob(f"*{term_with_underscores}*.pdf")))
-        if term_with_spaces != search_term and term_with_spaces != term_with_underscores:
-            matching_files.extend(list(pdf_path.glob(f"*{term_with_spaces}*.pdf")))
-        if search_term.isdigit():
-             matching_files.extend(list(pdf_path.glob(f"*{search_term}*.pdf")))
-             
-        #unique_matches = sorted(list(set(matching_files)))
+        search_term = unquote(nombre_o_codigo).strip().lower()
+        
+        print(f"[PDF] Buscando: '{search_term}'")
+        
+        # Buscar por código O por nombre de producto
+        matching_files = []
+        for pdf in pdf_path.glob("*.pdf"):
+            filename_lower = pdf.stem.lower()
+            # Buscar por código o por palabra clave (epóxico, uretano, etc.)
+            if search_term in filename_lower or any(word in filename_lower for word in search_term.split()):
+                matching_files.append(pdf)
         
         if not matching_files:
+            print(f"[PDF] No encontrado. Archivos disponibles:")
+            for f in list(pdf_path.glob("*.pdf"))[:5]:
+                print(f"  - {f.name}")
             raise HTTPException(status_code=404, detail="PDF no encontrado")
         
-        return FileResponse(
-            matching_files[0],
-            media_type='application/pdf',
-            filename=matching_files[0].name
-        )
+        print(f"[PDF] ✓ Enviando: {matching_files[0].name}")
+        return FileResponse(matching_files[0], media_type='application/pdf', filename=matching_files[0].name)
+    except HTTPException:
+        raise
     except Exception as e:
+        print(f"[PDF ERROR] {e}")
         raise HTTPException(status_code=500, detail=str(e))
-    
 @app.post("/api/reset_context/{session_id}")
 async def reset_context(session_id: str):
     if session_id not in sessions:
@@ -385,9 +369,6 @@ async def get_pictograma(filename: str):
     try:
         from urllib.parse import unquote
         filename = unquote(filename)
-        
-        # ✅ ARREGLO: Path correcto (sin 'src/api')
-        images_path = Path('/Users/sofiavelandiasierra/Documents/RAG/RAG/data/extracted_content/images')
         file_path = images_path / filename
         
         print(f"\n[DEBUG PICTOGRAMA]")
