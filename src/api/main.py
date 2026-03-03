@@ -56,7 +56,7 @@ app.add_middleware(
 )
 
 BASE_DIR = Path(__file__).parent.parent.parent
-config = ProjectConfig()  # ← este sí está bien
+config = ProjectConfig()  
 db_path = config.get_folder('vector_db')
 images_path = config.get_folder('images')
 pdf_path = config.get_folder('raw_documents')

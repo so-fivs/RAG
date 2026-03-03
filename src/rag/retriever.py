@@ -564,7 +564,7 @@ class HybridRetriever:
         
         for result in all_results:
             if result.tipo_contenido == 'imagen':
-                result.similarity *= 1.3 
+                result.similarity *= 1.2
                 print(f"  [BOOST IMAGEN] {result.metadata.get('imagen_nombre', 'N/A')}: {result.similarity:.3f}")
         
         # 5. Ordenar y seleccionar top-N

@@ -5,7 +5,7 @@ class ProjectConfig:
     """Configuración centralizada del proyecto"""
     
     def __init__(self, base_path: str = None):
-        self.base_path = Path(base_path) if base_path else Path.cwd()
+        self.base_path = Path(base_path) if base_path else Path(__file__).resolve().parent
         self.GEMINI_API_KEY = "AIzaSyAd_sMLJqVm4yKDxBVsZQDHQ0hMoTFKrt0" 
 
         
@@ -15,7 +15,8 @@ class ProjectConfig:
             'data': self.base_path / 'data',  # Carpeta principal de data
             'extracted_content': self.base_path / 'data' / 'extracted_content',
             'processed_chunks': self.base_path / 'data' / 'processed_chunks',
-            'vector_db': self.base_path / 'data' / 'vector_db',
+            'vector_db': self.base_path  / 'data' / 'vector_db',
+
         }
         
         # Subcarpetas para contenido extraído

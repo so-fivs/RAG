@@ -99,6 +99,17 @@ class RAGGenerator:
             
             metadata_dict = self._format_metadata_deduplicated(structured_metadatas) 
             prompt = self._build_prompt(query, results, metadata_dict, product_info)
+            text_chunks = [r for r in results if r.tipo_contenido == 'texto']
+            if not text_chunks:
+                return GeneratedResponse(
+                    answer="No encontré información de texto en la FDS para responder esta pregunta con precisión.",
+                    sources=self._format_sources(results),
+                    fds_reference=None,
+                    structured_metadata=metadata_dict,
+                    pictogramas=[],
+                    latency_ms=0,
+                    retrieval_metrics={}
+                )
             llm_response = self._call_llm(prompt)
             
             # Extraer referencia FDS explícita
@@ -183,8 +194,9 @@ Fecha de Emisión FDS: {fecha_fds}
 
         prompt += "\nCONTEXTO DE LA FDS:\n"
         prompt += "\nCONTEXTO DE LA FDS:\n"
-        for i, result in enumerate(results[:5], 1):
-            prompt += f"\n[Fragmento {i}]\n{result.content[:800]}\n"
+        text_results = [r for r in results if r.tipo_contenido == 'texto']
+        for i, result in enumerate(text_results[:5], 1):
+            prompt += f"\n[Fragmento {i} - Sección: {result.metadata.get('seccion', 'N/A')}]\n{result.content[:800]}\n"
         
         prompt += """
 
@@ -197,7 +209,14 @@ Fecha de Emisión FDS: {fecha_fds}
     5. Usa lenguaje técnico pero accesible, sin jerga innecesaria
     6. Para información sobre precauciones, revisa también la sección de controles de exposición/protección individual
     7. No incluyas información de otros productos o documentos si no la encuentras directamente
-    8. IMPORTANTE: Responde en texto plano sin formato Markdown, sin asteriscos, negritas ni listas numeradas
+    8. Responde ÚNICAMENTE con información presente en los fragmentos anteriores
+    9. Si un dato no está en los fragmentos, di exactamente: "La FDS no especifica este dato"
+    10. NO completes con conocimiento general ni suposiciones
+    11. NO menciones materiales, temperaturas ni condiciones que no estén literalmente en el texto
+    12. Cita la sección de donde proviene cada dato (ej: "Según la sección de manipulación...")
+    13. Si los fragmentos no contienen información relevante para la pregunta, responde: 
+    "No encontré información suficiente en la FDS sobre este tema"`
+    14. IMPORTANTE: Responde en texto plano sin formato Markdown, sin asteriscos, negritas ni listas numeradas
 
     RESPUESTA DETALLADA:
     """
@@ -215,7 +234,7 @@ Fecha de Emisión FDS: {fecha_fds}
                     'temperature': self.temperature,
                     'num_predict': 500,
                     'top_p': 0.9,
-                    'num_ctx': 4096
+                    'num_ctx': 4093
                 }
             )
             
@@ -236,7 +255,6 @@ Fecha de Emisión FDS: {fecha_fds}
             
             print(f"  [QWEN] ✅ Respuesta limpia: {len(text)} chars")
             return text
-            
         except Exception as e:
             print(f"  [QWEN ERROR] {e}")
             return f"Error: {str(e)}"
