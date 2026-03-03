@@ -14,7 +14,7 @@ data/vector_db/
 data/metadata/git add .
 mlruns/
 .ipynb_checkpoints/
-
+Readme.md
 # --- Documentos Originales (Opcional, si son pesados) ---
 raw_documents/*.pdf
 
