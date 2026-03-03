@@ -19,10 +19,7 @@ project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 from config import ProjectConfig
 from src.rag.generator import RAGGenerator
-config = ProjectConfig()
-db_path = config.get_folder('vector_db')
-images_path = config.get_folder('images')
-pdf_path = config.get_folder('raw_documents')
+
 
 # -----------------------------------------------------------------------------
 # MODELOS
@@ -59,15 +56,23 @@ app.add_middleware(
 )
 
 BASE_DIR = Path(__file__).parent.parent.parent
+config = ProjectConfig()  # ← este sí está bien
+db_path = config.get_folder('vector_db')
+images_path = config.get_folder('images')
+pdf_path = config.get_folder('raw_documents')
+templates_dir = BASE_DIR / "templates"
+if templates_dir.exists():
+    templates = Jinja2Templates(directory=str(templates_dir))
+else:
+    templates = None
 
 # -----------------------------------------------------------------------------
 # INICIALIZACIÓN GLOBAL
 # -----------------------------------------------------------------------------
-config = ProjectConfig()
 rag_generator = None
 sessions: Dict[str, Dict[str, Any]] = {}
 
-mlflow.set_tracking_uri("file:./mlruns")
+mlflow.set_tracking_uri(f"file://{BASE_DIR}/mlruns")
 mlflow.set_experiment("RAG_FDS_System")
 
 MAX_TIMEOUT = 600 
@@ -120,7 +125,7 @@ async def startup_event():
         raise
 
 # -----------------------------------------------------------------------------
-# Lógica principal que genera la respuesta (devuelve un dict serializable)
+# Lógica principal que genera la respuesta 
 # -----------------------------------------------------------------------------
 async def run_chat_logic(request: ChatRequest) -> Dict[str, Any]:
     """
