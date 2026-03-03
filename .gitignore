@@ -1,0 +1,24 @@
+# --- Entorno de Python ---
+venv/
+.env
+__pycache__/
+*.py[cod]
+*$py.class
+
+# --- Bases de Datos (No subir la DB pesada) ---
+**/chroma.sqlite3
+data/vector_db/
+*.db
+
+# --- Archivos de Salida de Procesamiento ---
+data/metadata/git add .
+mlruns/
+.ipynb_checkpoints/
+Readme.md
+# --- Documentos Originales (Opcional, si son pesados) ---
+raw_documents/*.pdf
+
+# --- IDEs y Sistema ---
+.vscode/
+.idea/
+.DS_Store
