@@ -88,10 +88,10 @@ class RAGGenerator:
         
         try:
             results, detected_product, structured_metadatas, metrics, product_info, images = self.retriever.retrieve(
-                self.context.enrich_query(query) if use_context else query,
-                context_product=self.context.current_product if use_context else None,
-                n_candidates=30,
-                n_final=5
+            self.context.enrich_query(query) if use_context else query,
+            context_product=self.context.current_product if use_context else None,
+            n_candidates=30,
+            n_final=15    
             )
             
             if detected_product and use_context:

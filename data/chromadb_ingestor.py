@@ -250,11 +250,13 @@ class ChromaDBIngestor:
 
 def main():
     """Ejecuta ingesta de todos los chunks procesados."""
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).parent.parent))  
     from config import ProjectConfig
-    
+
     config = ProjectConfig()
     
-    # ✅ CAMBIO CRÍTICO: reset_db=False por defecto
     print("🚀 Inicializando ChromaDB (modo incremental)...")
     print("   Si necesitas resetear todo, usa: cleanup_chromadb.py\n")
     
