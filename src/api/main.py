@@ -18,7 +18,7 @@ warnings.filterwarnings("ignore", message="Add of existing embedding ID")
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 from config import ProjectConfig
-from src.rag.generator import RAGGenerator
+from src.backend.generator import RAGGenerator
 
 
 # -----------------------------------------------------------------------------
@@ -60,7 +60,7 @@ config = ProjectConfig()
 db_path = config.get_folder('vector_db')
 images_path = config.get_folder('images')
 pdf_path = config.get_folder('raw_documents')
-templates_dir = BASE_DIR / "templates"
+templates_dir = BASE_DIR / "src"/"frontend"
 if templates_dir.exists():
     templates = Jinja2Templates(directory=str(templates_dir))
 else:
