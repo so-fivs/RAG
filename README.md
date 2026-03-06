@@ -256,4 +256,4 @@ python evaluation/ragas_eval_ollama.py
 - La latencia con `qwen2.5:1.5b` en CPU es de 30–240 segundos por consulta.
 - Parche aplicado en `local_persistent_hnsw.py` para compatibilidad de `hnswlib==0.8.0` en macOS (`file_handle_count` + `persistence_location`).
 
-> ⚠️ **Seguridad:** Mover la API key de Gemini de `config.py` a variable de entorno antes de hacer el repositorio público.
+
