@@ -153,4 +153,4 @@ mlflow ui --backend-store-uri file:./mlruns   # http://127.0.0.1:5000
 - La latencia depende del hardware: con `qwen2.5:1.5b` en CPU se esperan 30–240 segundos por consulta.
 - `config.py` usa `Path(__file__).resolve().parent` como base para garantizar rutas absolutas independientes del directorio de ejecución.
 
-> ⚠️ **Seguridad:** Mover la API key de Gemini de `config.py` a variable de entorno antes de hacer el repositorio público.
+
