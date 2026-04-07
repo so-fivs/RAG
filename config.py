@@ -1,10 +1,11 @@
 import sys
 from pathlib import Path
 
+
 class ProjectConfig:
     def __init__(self, base_path: str = None):
         self.base_path = Path(base_path) if base_path else Path(__file__).resolve().parent
-        self.GEMINI_API_KEY = "AIzaSyAd_sMLJqVm4yKDxBVsZQDHQ0hMoTFKrt0"
+        #self.GEMINI_API_KEY = "AIzaSyAd_sMLJqVm4yKDxBVsZQDHQ0hMoTFKrt0"
 
         # Arquitectura medallón
         self.folders = {

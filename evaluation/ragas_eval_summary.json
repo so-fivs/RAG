@@ -1,0 +1,132 @@
+{
+  "timestamp": "2026-04-07T13:02:28.823821",
+  "mode": "api",
+  "dataset_size": 5,
+  "total_time_s": 708.6,
+  "avg_latency_ms": 141722,
+  "aggregate_metrics": {
+    "faithfulness": {
+      "min": 0.0,
+      "max": 0.333,
+      "avg": 0.126
+    },
+    "answer_relevancy": {
+      "min": 0.0,
+      "max": 1.0,
+      "avg": 0.4
+    },
+    "context_precision": {
+      "min": 0.0,
+      "max": 0.096,
+      "avg": 0.037
+    },
+    "context_recall": {
+      "min": 0.0,
+      "max": 0.5,
+      "avg": 0.187
+    },
+    "answer_similarity": {
+      "min": 0.038,
+      "max": 0.393,
+      "avg": 0.123
+    },
+    "answer_correctness": {
+      "min": 0.023,
+      "max": 0.636,
+      "avg": 0.168
+    },
+    "composite": 0.173
+  },
+  "results": [
+    {
+      "question": "¿Cuáles son los códigos de peligro H del Esmalte Epóxico Aluminio?",
+      "answer": "El Esmalte Epóxico Aluminio fabricado por Sika Colombia S.A.S., con código de producto 000000613416 y FDS vigente desde el 07.10.2020, presenta los siguientes códigos de peligro H:\n\nH225: Líquido y vapores muy inflamables\nH315: Provoca irritación cutánea\nH317: Puede provocar una reacción alérgica en la piel\nH319: Provoca irritación ocular grave\n\nEl producto no presenta ningún componente CAS específico mencionado en los fragmentos proporcionados.",
+      "ground_truth": "El Esmalte Epóxico Aluminio (MSDS no. 1120) presenta los siguientes códigos H: H225 (líquido y vapores muy inflamables), H315 (provoca irritación cutánea), H317 (puede provocar una reacción alérgica en la piel) y H319 (provoca irritación ocular grave). La palabra de advertencia es Peligro.",
+      "product": "Esmalte Epóxico Aluminio",
+      "seccion": "identificacion_peligros",
+      "tipo": "peligros",
+      "contexts_count": 15,
+      "latency_ms": 316078,
+      "metrics": {
+        "faithfulness": 0.333,
+        "answer_relevancy": 1.0,
+        "context_precision": 0.089,
+        "context_recall": 0.436,
+        "answer_similarity": 0.393,
+        "answer_correctness": 0.636
+      }
+    },
+    {
+      "question": "¿Qué peligros presenta el Esmalte Uretano AR de Sika?",
+      "answer": "No encontré información de texto en la FDS para responder esta pregunta con precisión.",
+      "ground_truth": "El Esmalte Uretano AR Comp. A fabricado por Sika Colombia S.A.S presenta los códigos H226 (líquido y vapores inflamables), H304 (puede ser mortal en caso de ingestión), H316 (leve irritación cutánea), H317 (reacción alérgica en piel), H336 (somnolencia o vértigo) y H412 (nocivo para organismos acuáticos). Es un líquido inflamable categoría 3 con peligro de aspiración categoría 1.",
+      "product": "Esmalte Uretano AR",
+      "seccion": "identificacion_peligros",
+      "tipo": "peligros",
+      "contexts_count": 0,
+      "latency_ms": 1415,
+      "metrics": {
+        "faithfulness": 0.0,
+        "answer_relevancy": 0.0,
+        "context_precision": 0.0,
+        "context_recall": 0.0,
+        "answer_similarity": 0.038,
+        "answer_correctness": 0.023
+      }
+    },
+    {
+      "question": "¿Cuáles son los primeros auxilios en caso de inhalación del Esmalte Epóxico Aluminio?",
+      "answer": "El Esmalte Epóxico Aluminio fabricado por Sika Colombia S.A.S., con código de producto 000000613416 y vigente desde el 07.10.2020, se clasifica como un producto químico inflamable. En caso de inhalación del Esmalte Epóxico Aluminio, los primeros auxilios recomendados son:\n\nRetirar a la persona de la zona peligrosa.\nConsultar a un médico.\nMostrar esta ficha de seguridad al doctor que esté de servicio.\n\nEn caso de contacto con la piel o los ojos:\nRetirar inmediatamente la ropa y zapatos contaminados.\nEliminar lavando con jabón y mucha agua.\nSi los síntomas persisten, consultar a un médico.\n\nPara el tratamiento de residuos del producto, se recomienda evitar su generación al máximo posible. La eliminación del producto debe cumplir con las regulaciones ambientales locales y estar en conformidad con la legislación sobre protección del medio ambiente. Los sobrantes deben ser derramados por un contratista autorizado para su eliminación segura.\n\nEn cuanto a las propiedades físicas y químicas, el Esmalte Epóxico Aluminio es un líquido característico con un olor específico. Su punto de inflamación está en menos de 23°C cuando se encuentra en vaso cerrado (ASTM D56), lo que indica una alta sensibilidad a la temperatura.\n\nPara las medidas contra incendios, el producto no tiene ningún material inflamable conocido y los medios de extinción apropiados incluyen espuma resistente al alcohol, dióxido de carbono (CO2) y productos químicos en polvo. Para luchar contra incendios, se recomienda usar equipo respiratorio autónomo.\n\nEn cuanto a la composición del producto, el Esmalte Epoxico Aluminio es una mezcla de solventes modificados con resinas epóxicas (peso molecular medio 700-1100) y contiene sustancias como xileno (CAS: 1330-20-7), acetato de n-propilo (CAS: 10",
+      "ground_truth": "En caso de inhalación del Esmalte Epóxico Aluminio, se debe trasladar a la persona a un espacio abierto, alejarla de la zona de peligro y consultar a un médico después de una exposición importante. Se debe mostrar la ficha de seguridad al médico de servicio.",
+      "product": "Esmalte Epóxico Aluminio",
+      "seccion": "primeros_auxilios",
+      "tipo": "emergencias",
+      "contexts_count": 15,
+      "latency_ms": 387239,
+      "metrics": {
+        "faithfulness": 0.297,
+        "answer_relevancy": 1.0,
+        "context_precision": 0.096,
+        "context_recall": 0.5,
+        "answer_similarity": 0.086,
+        "answer_correctness": 0.086
+      }
+    },
+    {
+      "question": "¿Qué hacer en caso de contacto del Esmalte Uretano con la piel?",
+      "answer": "No encontré información de texto en la FDS para responder esta pregunta con precisión.",
+      "ground_truth": "En caso de contacto del Esmalte Uretano AR con la piel, se debe quitar inmediatamente la ropa contaminada, lavar con abundante agua y jabón, y consultar a un médico si persiste la irritación. Se debe remover la ropa contaminada antes de reutilizarla.",
+      "product": "Esmalte Uretano AR",
+      "seccion": "primeros_auxilios",
+      "tipo": "emergencias",
+      "contexts_count": 0,
+      "latency_ms": 2138,
+      "metrics": {
+        "faithfulness": 0.0,
+        "answer_relevancy": 0.0,
+        "context_precision": 0.0,
+        "context_recall": 0.0,
+        "answer_similarity": 0.057,
+        "answer_correctness": 0.057
+      }
+    },
+    {
+      "question": "¿Qué equipos de protección personal se requieren para manipular el Esmalte Poliuretano de TECNIDECOR?",
+      "answer": "No encontré información de texto en la FDS para responder esta pregunta con precisión.",
+      "ground_truth": "Para manipular el Esmalte Poliuretano de TECNIDECOR se requiere: respirador para vapores orgánicos para protección respiratoria, guantes de neopreno para protección de manos, gafas de seguridad para protección ocular, y ropa de trabajo adecuada. Los lugares de manipulación deben contar con ventilación natural o forzada.",
+      "product": "Esmalte Poliuretano",
+      "seccion": "controles_exposicion_proteccion",
+      "tipo": "proteccion",
+      "contexts_count": 0,
+      "latency_ms": 1741,
+      "metrics": {
+        "faithfulness": 0.0,
+        "answer_relevancy": 0.0,
+        "context_precision": 0.0,
+        "context_recall": 0.0,
+        "answer_similarity": 0.04,
+        "answer_correctness": 0.04
+      }
+    }
+  ]
+}
