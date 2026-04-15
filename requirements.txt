@@ -1,63 +1,18 @@
-# ============================================================================
-# REQUIREMENTS.TXT - Sistema RAG FDS
-# ============================================================================
-
-# ===== RAG CORE =====
-chromadb==0.4.24       
-hnswlib==0.8.0 
-ollama==0.1.6
-
-# ===== API BACKEND =====
-fastapi==0.104.1
-uvicorn==0.24.0
-uvicorn[standard]  # Incluye uvloop, httptools, websockets
-pydantic==2.5.0
-pydantic_core==2.14.1
-python-multipart==0.0.6
-starlette==0.27.0
-
-# ===== PDF PROCESSING =====
-# PyMuPDF (fitz)
-PyMuPDF==1.23.8
-PyPDF2==3.0.1
-pdfplumber==0.10.3
-pdfminer.six==20221105
-pypdfium2==5.1.0
-
-# Camelot y dependencias
+numpy==1.26.4
+pyarrow==12.0.0
+tiktoken==0.5.1
+fsspec==2023.10.0
+datasets==2.15.0
+pydantic>=2.0.0
+docling
+docling-core
+pdfplumber
+pytesseract
+opencv-python-headless
 camelot-py[cv]
-opencv-python  # cv2 (requerido por camelot)
-Pillow==10.1.0
-
-# OCR
-pytesseract==0.3.10
-
-# ===== DATA PROCESSING =====
-pandas==2.1.3
-numpy==1.26.2
-openpyxl==3.1.2
-
-# ===== UTILITIES =====
-python-dotenv==1.0.0
-requests==2.32.5
-PyYAML==6.0.3
-httpx>=0.25.2,<0.26.0   
-packaging<24  
-
-# ===== MLFLOW (TRACKING) =====
-mlflow==2.9.2
-
-# ===== GOOGLE DRIVE (OPCIONAL) =====
-google-auth==2.43.0
-google-auth-oauthlib
-google-api-python-client
-
-# ===== OTROS =====
-typer==0.20.0  # CLI utilities
-rich==14.2.0   # Terminal formatting=
+langchain
+langchain-community
+langchain-ollama
 ragas
-langchain>=0.2.0
-langchain-community>=0.2.0
-langchain-ollama>=0.1.0
-datasets
-# docling
+chromadb>=0.5.0
+pysqlite3-binary
