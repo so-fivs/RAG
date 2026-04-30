@@ -1,0 +1,142 @@
+[
+  {
+    "question": "¿Cuáles son los códigos de peligro H del Esmalte Epóxico Aluminio?",
+    "ground_truth": "El Esmalte Epóxico Aluminio (MSDS no. 1120) presenta los siguientes códigos H: H225 (líquido y vapores muy inflamables), H315 (provoca irritación cutánea), H317 (puede provocar una reacción alérgica en la piel) y H319 (provoca irritación ocular grave). La palabra de advertencia es Peligro.",
+    "product": "Esmalte Epóxico Aluminio",
+    "seccion": "identificacion_peligros",
+    "tipo_query": "peligros"
+  },
+  {
+    "question": "¿Qué peligros presenta el Esmalte Uretano AR de Sika?",
+    "ground_truth": "El Esmalte Uretano AR Comp. A fabricado por Sika Colombia S.A.S presenta los códigos H226 (líquido y vapores inflamables), H304 (puede ser mortal en caso de ingestión), H316 (leve irritación cutánea), H317 (reacción alérgica en piel), H336 (somnolencia o vértigo) y H412 (nocivo para organismos acuáticos). Es un líquido inflamable categoría 3 con peligro de aspiración categoría 1.",
+    "product": "Esmalte Uretano AR",
+    "seccion": "identificacion_peligros",
+    "tipo_query": "peligros"
+  },
+  {
+    "question": "¿Cuáles son los primeros auxilios en caso de inhalación del Esmalte Epóxico Aluminio?",
+    "ground_truth": "En caso de inhalación del Esmalte Epóxico Aluminio, se debe trasladar a la persona a un espacio abierto, alejarla de la zona de peligro y consultar a un médico después de una exposición importante. Se debe mostrar la ficha de seguridad al médico de servicio.",
+    "product": "Esmalte Epóxico Aluminio",
+    "seccion": "primeros_auxilios",
+    "tipo_query": "emergencias"
+  },
+  {
+    "question": "¿Qué hacer en caso de contacto del Esmalte Uretano con la piel?",
+    "ground_truth": "En caso de contacto del Esmalte Uretano AR con la piel, se debe quitar inmediatamente la ropa contaminada, lavar con abundante agua y jabón, y consultar a un médico si persiste la irritación. Se debe remover la ropa contaminada antes de reutilizarla.",
+    "product": "Esmalte Uretano AR",
+    "seccion": "primeros_auxilios",
+    "tipo_query": "emergencias"
+  },
+  {
+    "question": "¿Qué equipos de protección personal se requieren para manipular el Esmalte Poliuretano de TECNIDECOR?",
+    "ground_truth": "Para manipular el Esmalte Poliuretano de TECNIDECOR se requiere: respirador para vapores orgánicos para protección respiratoria, guantes de neopreno para protección de manos, gafas de seguridad para protección ocular, y ropa de trabajo adecuada. Los lugares de manipulación deben contar con ventilación natural o forzada.",
+    "product": "Esmalte Poliuretano",
+    "seccion": "controles_exposicion_proteccion",
+    "tipo_query": "proteccion"
+  },
+  {
+    "question": "¿Cuáles son los componentes químicos (CAS) del Esmalte Alquídico Serie 31?",
+    "ground_truth": "El Esmalte Alquídico Serie 31 contiene xilenos (CAS 1330-20-7) y nafta de benceno liviana (CAS 8032-32-4) como componentes principales identificados con número CAS. Presenta los códigos H225, H304, H315, H319, H335, H372, H373 y H412.",
+    "product": "Esmalte Alquídico Serie 31",
+    "seccion": "composicion_componentes",
+    "tipo_query": "componentes"
+  },
+  {
+    "question": "¿Cuáles son los peligros del Corlar 2.8 HG Epóxico Alto Brillo de AXALTA?",
+    "ground_truth": "El Corlar 2.8 HG Epóxico Alto Brillo de AXALTA presenta los códigos H226 (líquido y vapores inflamables), H315 (irritación cutánea), H317 (reacción alérgica en piel), H319 (irritación ocular grave) y H350 (puede provocar cáncer). Es un líquido inflamable categoría 3 con carcinogenicidad categoría 1A. La palabra de advertencia es Peligro.",
+    "product": "Corlar 2.8 HG Epóxico Alto Brillo",
+    "seccion": "identificacion_peligros",
+    "tipo_query": "peligros"
+  },
+  {
+    "question": "¿Qué peligros medioambientales presenta el Esmalte Uretano AR?",
+    "ground_truth": "El Esmalte Uretano AR presenta peligro a corto plazo (agudo) para el medio ambiente acuático categoría 3 y peligro a largo plazo (crónico) para el medio ambiente acuático categoría 3, representado por el código H412 (nocivo para los organismos acuáticos, con efectos nocivos duraderos).",
+    "product": "Esmalte Uretano AR",
+    "seccion": "informacion_ecologica",
+    "tipo_query": "peligros"
+  },
+  {
+    "question": "¿Qué peligros presenta la Pintura Anticorrosiva Gris 507 de Pintuco?",
+    "ground_truth": "La Pintura Anticorrosiva Gris 507 de Pintuco presenta peligros acuáticos: peligrosidad aguda para el medio ambiente acuático categoría 2 (H401) y peligrosidad crónica categoría 3 (H412). También presenta H226 (líquido inflamable), H304 (peligro de aspiración), H315, H317, H319 (irritaciones) y H336 (somnolencia). Contiene dióxido de titanio (CAS 13463-67-7).",
+    "product": "Pintura Anticorrosiva Gris 507",
+    "seccion": "identificacion_peligros",
+    "tipo_query": "peligros"
+  },
+  {
+    "question": "¿Cuáles son los riesgos principales del Esmalte Poliuretano TECNIDECOR?",
+    "ground_truth": "El Esmalte Poliuretano de TECNIDECOR es inflamable, contiene isocianatos y puede causar sensibilización cutánea. Se puede incendiar fácilmente por calor, chispas o llamas. Los vapores pueden causar mareos o sofocación y formar mezclas explosivas con el aire. Por sobreexposición puede causar irritaciones gastrointestinales, respiratorias, depresión del sistema nervioso central, náuseas y dolores de cabeza.",
+    "product": "Esmalte Poliuretano",
+    "seccion": "identificacion_peligros",
+    "tipo_query": "peligros"
+  },
+  {
+    "question": "¿Cuáles son las medidas de precaución P para el Esmalte Epóxico Aluminio?",
+    "ground_truth": "El Esmalte Epóxico Aluminio incluye los códigos de precaución P210 (mantener alejado de fuentes de calor), P233 (mantener recipiente cerrado), P235 (mantener en lugar fresco), P240 (conectar a tierra), P241 (usar material eléctrico antiexplosión), P242, P243 y P261 entre otros.",
+    "product": "Esmalte Epóxico Aluminio",
+    "seccion": "identificacion_peligros",
+    "tipo_query": "proteccion"
+  },
+  {
+    "question": "¿Qué composición química tiene el Esmalte Uretano AR de Sika?",
+    "ground_truth": "El Esmalte Uretano AR Comp. A de Sika contiene etilbenceno (CAS 100-41-4), acetato de n-butilo (CAS 123-86-4), xilenos (CAS 1330-20-7), destilados de petróleo hidrotratados ligeros (CAS 64742-95-6) y metacrilato de metilo (CAS 80-62-6) entre sus componentes con número CAS identificado.",
+    "product": "Esmalte Uretano AR",
+    "seccion": "composicion_componentes",
+    "tipo_query": "componentes"
+  },
+  {
+    "question": "¿Cuál es la clasificación de inflamabilidad del Esmalte Epóxico Aluminio?",
+    "ground_truth": "El Esmalte Epóxico Aluminio se clasifica como líquido inflamable categoría 2, lo que corresponde al código H225: líquido y vapores muy inflamables. Esto lo hace más peligroso que un líquido inflamable categoría 3.",
+    "product": "Esmalte Epóxico Aluminio",
+    "seccion": "identificacion_peligros",
+    "tipo_query": "propiedades"
+  },
+  {
+    "question": "¿Qué primeros auxilios se deben aplicar en caso de contacto del Esmalte Alquídico con los ojos?",
+    "ground_truth": "En caso de contacto del Esmalte Alquídico Serie 31 con los ojos, se debe enjuagar inmediatamente con mucha agua, levantando los párpados superior e inferior. Verificar si la víctima lleva lentes de contacto y retirarlos. Continuar enjuagando por lo menos durante 10 minutos y procurar atención médica.",
+    "product": "Esmalte Alquídico Serie 31",
+    "seccion": "primeros_auxilios",
+    "tipo_query": "emergencias"
+  },
+  {
+    "question": "¿Cuáles son los peligros para la salud del Esmalte Alquídico Serie 31?",
+    "ground_truth": "El Esmalte Alquídico Serie 31 presenta H315 (irritación cutánea), H319 (irritación ocular grave), H335 (puede irritar las vías respiratorias), H372 (puede provocar daños en órganos por exposición prolongada) y H373 (puede provocar daños en órganos por exposiciones repetidas). También presenta H304 (peligro de aspiración) y H412 (nocivo para organismos acuáticos).",
+    "product": "Esmalte Alquídico Serie 31",
+    "seccion": "identificacion_peligros",
+    "tipo_query": "peligros"
+  },
+  {
+    "question": "¿Cuáles son los componentes del Corlar 2.8 HG Epóxico de AXALTA?",
+    "ground_truth": "El Corlar 2.8 HG Epóxico Alto Brillo de AXALTA contiene producto de reacción bisfenol-A-epiclorhidrina, dióxido de titanio, diacetona alcohol (CAS 123-42-2), nafta disolvente fracción aromática ligera, 1,2,4-Trimetilbenceno, 2-Butoxietanol (CAS 111-76-2), xilenos (CAS 1330-20-7), acetona, etilbenceno (CAS 100-41-4) y tetrahidrofurano (CAS 109-99-9).",
+    "product": "Corlar 2.8 HG Epóxico Alto Brillo",
+    "seccion": "composicion_componentes",
+    "tipo_query": "componentes"
+  },
+  {
+    "question": "¿Qué fabricante produce el Esmalte Uretano AR y cuál es su número de emergencia?",
+    "ground_truth": "El Esmalte Uretano AR Comp. A es fabricado por Sika Colombia S.A.S., ubicada en la Vereda Canavita km 20.5 Autopista Norte, Tocancipá, Cundinamarca. El número de emergencia es CISPROQUIM: 2886012 / 2886355 en Bogotá, y 01 8000 916012 para el resto del país.",
+    "product": "Esmalte Uretano AR",
+    "seccion": "identificacion_producto",
+    "tipo_query": "identificacion"
+  },
+  {
+    "question": "¿Cuáles son los peligros del Esmalte Alquídico para el sistema nervioso?",
+    "ground_truth": "El Esmalte Alquídico Serie 31 presenta toxicidad específica en determinados órganos por exposición única categoría 3 afectando el sistema respiratorio (H335), y toxicidad específica por exposiciones repetidas por inhalación categoría 1 afectando el sistema nervioso central (H372/H373). Esto indica un riesgo crónico de daño neurológico por exposición prolongada.",
+    "product": "Esmalte Alquídico Serie 31",
+    "seccion": "informacion_toxicologica",
+    "tipo_query": "peligros"
+  },
+  {
+    "question": "¿Es la Koraza Blanco 2650 de Pintuco un producto clasificado como peligroso?",
+    "ground_truth": "No. La Koraza Blanco 2650 de Pintuco, conforme al Decreto 1496 de 2018 que adopta el Sistema Globalmente Armonizado (SGA), no está clasificada como producto peligroso. No reporta códigos H ni P de peligro. Su uso es como pintura decorativa para interiores.",
+    "product": "Koraza Blanco 2650",
+    "seccion": "identificacion_peligros",
+    "tipo_query": "peligros"
+  },
+  {
+    "question": "¿Qué medidas se deben tomar en caso de derrame del Esmalte Uretano AR?",
+    "ground_truth": "En caso de derrame del Esmalte Uretano AR se debe evitar la dispersión del material derramado y su contacto con el suelo, vías fluviales, tuberías de desagüe y alcantarillas. Se debe informar a las autoridades pertinentes si el producto ha causado contaminación ambiental. Usar equipo de protección personal adecuado durante la limpieza.",
+    "product": "Esmalte Uretano AR",
+    "seccion": "medidas_vertido_accidental",
+    "tipo_query": "emergencias"
+  }
+]

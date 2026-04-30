@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema RAG - Fichas de Seguridad</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .message-enter {
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .code-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            margin: 2px;
+        }
+
+        .code-h {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+        }
+
+        .code-p {
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #93c5fd;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-6xl h-[90vh] glass-effect rounded-3xl shadow-2xl flex flex-col overflow-hidden">
+        
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-purple-600 to-indigo-600 p-6 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                </svg>
+                <div>
+                    <h1 class="text-2xl font-bold text-white tracking-tight">Sistema RAG - Fichas de Seguridad</h1>
+                    <p class="text-purple-100 text-sm">Asistente de consulta química especializado</p>
+                </div>
+            </div>
+            <button onclick="resetContext()" class="p-2 hover:bg-white/20 rounded-lg transition-colors" title="Reiniciar conversación">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Messages Area -->
+        <div id="messagesContainer" class="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-thin">
+            <div id="welcomeScreen" class="h-full flex items-center justify-center">
+                <div class="text-center text-white/60 max-w-md">
+                    <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                    </svg>
+                    <p class="text-lg font-medium mb-2">¡Bienvenido al sistema RAG!</p>
+                    <p class="text-sm">Pregunta sobre peligros, componentes, precauciones o cualquier información de las fichas de seguridad.</p>
+                    <div class="mt-6 text-xs space-y-1">
+                        <p>Ejemplos:</p>
+                        <p class="text-purple-300">"¿Cuáles son los peligros del esmalte epóxico?"</p>
+                        <p class="text-purple-300">"¿Qué componentes tiene el uretano?"</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="p-6 bg-white/5 border-t border-white/10">
+            <div class="flex gap-3">
+                <input 
+                    id="messageInput"
+                    type="text" 
+                    placeholder="Escribe tu pregunta sobre seguridad química..."
+                    class="flex-1 glass-effect rounded-xl px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    onkeypress="handleKeyPress(event)"
+                />
+                <button 
+                    id="sendButton"
+                    onclick="sendMessage()"
+                    class="bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white p-3 rounded-xl transition-all shadow-lg"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.location.origin;
+        const sessionId = `session_${Date.now()}`;
+        let messages = [];
+        let loading = false;
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !loading) {
+                sendMessage();
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message || loading) return;
+
+            // Hide welcome screen
+            const welcomeScreen = document.getElementById('welcomeScreen');
+            if (welcomeScreen) welcomeScreen.remove();
+
+            // Add user message
+            addMessage('user', message);
+            input.value = '';
+            setLoading(true);
+
+            try {
+                const response = await fetch(`${API_URL}/api/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        query: message,
+                        session_id: sessionId,
+                        use_context: true
+                    })
+                });
+
+                if (!response.ok) throw new Error('Error en la respuesta del servidor');
+
+                const data = await response.json();
+                addMessage('assistant', data.answer, {
+                    metadata: data.structured_metadata,
+                    pictogramas: data.pictogramas,
+                    fds_reference: data.fds_reference,  
+                    metrics: data.metrics
+                });
+
+            } catch (error) {
+                console.error('Error:', error);
+                addMessage('error', 'Error al comunicarse con el servidor. Verifica que FastAPI esté corriendo en http://localhost:8000');
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        function addMessage(role, content, extras = {}) {
+            const container = document.getElementById('messagesContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message-enter';
+
+            if (role === 'user') {
+                messageDiv.innerHTML = `
+                    <div class="flex justify-end">
+                        <div class="bg-gradient-to-r from-purple-500 to-indigo-500 rounded-2xl rounded-tr-sm px-5 py-3 max-w-2xl shadow-lg">
+                            <p class="text-white">${escapeHtml(content)}</p>
+                        </div>
+                    </div>
+                `;
+            } else if (role === 'error') {
+                messageDiv.innerHTML = `
+                    <div class="flex justify-start">
+                        <div class="bg-red-500/20 glass-effect border border-red-500/30 rounded-2xl rounded-tl-sm px-5 py-3 max-w-2xl">
+                            <div class="flex items-center gap-2 mb-2">
+                                <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                </svg>
+                                <span class="text-red-300 font-semibold">Error</span>
+                            </div>
+                            <p class="text-red-200 text-sm">${escapeHtml(content)}</p>
+                        </div>
+                    </div>
+                `;
+            } else {
+                const metadataHTML = extras.metadata ? renderMetadata(extras.metadata) : '';
+                const pictogramasHTML = extras.pictogramas && extras.pictogramas.length > 0 ? renderPictogramas(extras.pictogramas) : '';
+                const downloadHTML = extras.fds_reference ? `
+                    <div class="pt-3 border-t border-white/10">
+                        <a href="${API_URL}/api/download_pdf/${extras.fds_reference.codigo}" 
+                           download
+                           class="inline-flex items-center gap-2 bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg text-sm transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            Descargar FDS - ${extras.fds_reference.producto}
+                        </a>
+                    </div>
+                ` : '';
+                const metricsHTML = extras.metrics ? renderMetrics(extras.metrics) : '';
+            
+                messageDiv.innerHTML = `
+                    <div class="flex justify-start">
+                        <div class="glass-effect rounded-2xl rounded-tl-sm p-5 max-w-4xl space-y-4">
+                            <div class="text-white leading-relaxed whitespace-pre-wrap">${escapeHtml(content)}</div>
+                            ${pictogramasHTML}
+                            ${metadataHTML}
+                            ${downloadHTML}
+                            ${metricsHTML}
+                        </div>
+                    </div>
+                `;
+            }
+
+            container.appendChild(messageDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function renderPictogramas(pictogramas) {
+            return `
+                <div class="pt-4 border-t border-white/10">
+                    <div class="flex items-center gap-2 mb-3">
+                        <svg class="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                        <h3 class="text-sm font-semibold text-yellow-300">Pictogramas de Peligro</h3>
+                    </div>
+                    <div class="flex flex-wrap gap-3">
+                        ${pictogramas.map(pic => `
+                            <div class="bg-white/20 rounded-lg p-2">
+                                <img src="${API_URL}/api/pictograma/${pic}" alt="${pic}" class="w-16 h-16 object-contain" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2264%22 height=%2264%22><rect fill=%22%23666%22 width=%2264%22 height=%2264%22/></svg>'"/>
+                                <p class="text-xs text-white/60 text-center mt-1">${pic.split('_')[0]}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderMetadata(metadata) {
+            if (!metadata || (!metadata.codigos_h?.length && !metadata.codigos_p?.length && !metadata.componentes_cas?.length)) {
+                return '';
+            }
+
+            const codigosH = metadata.codigos_h?.map(c => `
+                <div class="bg-red-500/10 border border-red-500/20 rounded-lg p-2 text-xs">
+                    <span class="code-h">${c.codigo}</span>
+                    <span class="text-red-200 ml-2">${c.descripcion}</span>
+                </div>
+            `).join('') || '';
+
+            const codigosP = metadata.codigos_p?.map(c => `
+                <div class="bg-blue-500/10 border border-blue-500/20 rounded-lg p-2 text-xs">
+                    <span class="code-p">${c.codigo}</span>
+                    <span class="text-blue-200 ml-2">${c.descripcion}</span>
+                </div>
+            `).join('') || '';
+
+            const componentesCAS = metadata.componentes_cas?.map(c => `
+                <div class="bg-green-500/10 border border-green-500/20 rounded-lg p-2 text-xs">
+                    <div class="text-green-300 font-semibold">${c.nombre}</div>
+                    <div class="text-green-200 text-[10px]">
+                        CAS: ${c.cas} ${c.concentracion !== 'No especificada' ? `• ${c.concentracion}` : ''}
+                    </div>
+                </div>
+            `).join('') || '';
+
+            return `
+                <div class="pt-4 border-t border-white/10 space-y-3">
+                    <h3 class="text-sm font-semibold text-purple-300">Información Técnica</h3>
+                    ${codigosH ? `<div><h4 class="text-xs font-semibold text-red-300 mb-2">Códigos de Peligro (H)</h4><div class="space-y-1">${codigosH}</div></div>` : ''}
+                    ${codigosP ? `<div><h4 class="text-xs font-semibold text-blue-300 mb-2">Códigos de Precaución (P)</h4><div class="space-y-1">${codigosP}</div></div>` : ''}
+                    ${componentesCAS ? `<div><h4 class="text-xs font-semibold text-green-300 mb-2">Componentes Químicos</h4><div class="space-y-1">${componentesCAS}</div></div>` : ''}
+                </div>
+            `;
+        }
+
+        function renderMetrics(metrics) {
+            return `
+                <div class="pt-3 border-t border-white/10 flex items-center gap-4 text-xs text-white/50">
+                    <div>${metrics.total_chunks || 0} chunks</div>
+                    <div>Similitud: ${(metrics.top_similarity || 0).toFixed(2)}</div>
+                    <div>Latencia: ${Math.round(metrics.latency_ms || 0)}ms</div>
+                </div>
+            `;
+        }
+
+        function setLoading(isLoading) {
+            loading = isLoading;
+            const sendButton = document.getElementById('sendButton');
+            const input = document.getElementById('messageInput');
+            
+            if (isLoading) {
+                sendButton.innerHTML = '<svg class="w-5 h-5 spinner" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>';
+                sendButton.disabled = true;
+                input.disabled = true;
+
+                const container = document.getElementById('messagesContainer');
+                const loadingDiv = document.createElement('div');
+                loadingDiv.id = 'loadingIndicator';
+                loadingDiv.className = 'flex justify-start message-enter';
+                loadingDiv.innerHTML = `
+                    <div class="glass-effect rounded-2xl p-4 flex items-center gap-3">
+                        <svg class="w-5 h-5 text-purple-300 spinner" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                        <span class="text-white/80 text-sm">Analizando fichas de seguridad...</span>
+                    </div>
+                `;
+                container.appendChild(loadingDiv);
+            } else {
+                sendButton.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>';
+                sendButton.disabled = false;
+                input.disabled = false;
+
+                const loadingIndicator = document.getElementById('loadingIndicator');
+                if (loadingIndicator) loadingIndicator.remove();
+            }
+        }
+
+        async function resetContext() {
+            try {
+                await fetch(`${API_URL}/api/reset_context/${sessionId}`, { method: 'POST' });
+                document.getElementById('messagesContainer').innerHTML = `
+                    <div id="welcomeScreen" class="h-full flex items-center justify-center">
+                        <div class="text-center text-white/60 max-w-md">
+                            <p class="text-lg font-medium mb-2">Contexto reiniciado</p>
+                            <p class="text-sm">Puedes empezar una nueva conversación</p>
+                        </div>
+                    </div>
+                `;
+                messages = [];
+            } catch (error) {
+                console.error('Error resetting context:', error);
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
