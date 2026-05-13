@@ -44,3 +44,4 @@ tmp/
 .env
 *.env
 secrets.json
+rag_env/
