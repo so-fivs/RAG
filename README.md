@@ -192,33 +192,29 @@ RAG/
 
 ## Configuración y Ejecución
 
-```bash
-# Prerequisitos
-brew install ollama && ollama serve
-ollama pull nomic-embed-text && ollama pull qwen2.5:1.5b
+## Inicio rapido
 
-# Instalación
-git clone https://github.com/so-fivs/RAG.git && cd RAG
-python -m venv venv && source venv/bin/activate
-pip install -r requirements.txt
+### 1. Clonar el repositorio
+git clone https://github.com/so-fivs/RAG.git
+cd RAG
 
-# Pipeline de procesamiento (una vez por lote de PDFs)
-python src/ingest/extrac_pdf.py
-python src/ingest/chunkers_embedder.py
-python src/ingest/image_vision_procesor.py   # requiere llava:7b
-python src/ingest/chromadb_ingestor.py
-python src/ingest/chromadb_diagnostic.py     # verificar ingesta
+### 2. Configurar Lifecycle en SageMaker (una sola vez por notebook)
+1. AWS Console → SageMaker → Lifecycle configurations → Create configuration
+2. Nombre: rag-fds-ollama-start
+3. Tipo: Start notebook
+4. Pegar el contenido de lifecycle_config.sh
+5. Guardar → ir al notebook → Edit → asignar lifecycle → Update
+6. Detener y reiniciar el notebook
 
-# Levantar API
-cd src/api && python main.py               # http://127.0.0.1:8000
+### 3. Ejecutar el setup
+bash setup-env.sh
 
-# Ver métricas MLflow
-mlflow ui --backend-store-uri file:./mlruns  # http://127.0.0.1:5000
+### 4. Lanzar la API
+source rag_env/bin/activate
+python3 src/api/main.py
 
-# Evaluación RAGAS
-python evaluation/ragas_eval_ollama.py
-```
-
+### 5. Acceder
+https://{nombre-notebook}.notebook.us-east-1.sagemaker.aws/proxy/8000
 ---
 
 ## Endpoints de la API
