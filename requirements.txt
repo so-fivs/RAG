@@ -1,25 +1,36 @@
-# Versiones de Estabilidad
+# requirements.txt — RAG FDS
+
+# Core cientifico
 numpy==1.26.4
-pyarrow==12.0.0
-tiktoken==0.5.1
-fsspec==2023.10.0
-datasets==2.15.0
 pydantic>=2.0.0
 
 # Procesamiento FDS
 docling
 docling-core
-pdfplumber
-pytesseract
-opencv-python-headless
-camelot-py[cv]
 pymupdf
 
-# RAG & Evaluación
-langchain
+# RAG
 langchain-community
 langchain-ollama
-ragas
+langchain-text-splitters
 chromadb>=0.5.0
-pysqlite3-binary
+ollama
+
+# API
+fastapi
+uvicorn[standard]
+jinja2
+python-multipart
+
+# AWS
+boto3
+
+# Evaluacion (opcional)
+ragas
+mlflow
+
+# Utilidades
 transformers
+tabulate
+pandas
+opencv-python

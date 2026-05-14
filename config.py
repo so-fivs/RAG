@@ -28,10 +28,26 @@ class ProjectConfig:
             'metadata': self.folders['gold'] / 'metadata',
         }
 
+        self.s3_bucket = "rag-fds-data"
+        self.s3_paths  = {
+            'bronze':          'bronze/',
+            'texts':           'gold/texts/',
+            'tables':          'gold/tables/',
+            'images':          'gold/images/',
+            'metadata':        'gold/metadata/',
+            'processed_chunks':'silver/chunked/',
+            'vector_db':       'vector_db/',
+        }
+
+def get_s3_path(self, folder_name: str) -> str:
+    return self.s3_paths.get(folder_name, folder_name + '/')
+
     def create_folders(self):
         """Crea todas las carpetas necesarias si no existen"""
+        excluir = {'vector_db'}
         for folder in self.folders.values():
-            folder.mkdir(parents=True, exist_ok=True)
+            if name not in excluir: 
+                folder.mkdir(parents=True, exist_ok=True)
         for subfolder in self.extracted_subfolders.values():
             subfolder.mkdir(parents=True, exist_ok=True)
         print("✓ Estructura de carpetas creada correctamente")

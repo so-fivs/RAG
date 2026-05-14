@@ -17,6 +17,13 @@ try:
 except ImportError:
     from config import ProjectConfig
 
+try:
+    from s3_sync import sync_vector_db
+    from pathlib import Path
+    import boto3
+    S3_DISPONIBLE = True
+except ImportError:
+    S3_DISPONIBLE = False
 
 def limpiar_carpetas_salida(config):
     """Elimina y recrea las carpetas gold/ para evitar datos duplicados en re-ejecuciones."""
@@ -151,7 +158,22 @@ def extraer_imagenes_soporte(pdf_path: str, config, nombre_base: str):
                 print(f"  [WARN] Imagen {nombre_base}_p{i}_img{j} omitida: {e}")
     doc.close()
 
+def _subir_gold_a_s3(config, nombre_base: str):
+    """Sube los archivos gold/ recién generados directamente a S3."""
+    s3 = boto3.client("s3", region_name="us-east-1")
+    carpetas = ['texts', 'tables', 'images', 'metadata']
 
+    for carpeta in carpetas:
+        prefijo = config.get_s3_path(carpeta)
+        ruta    = config.get_folder(carpeta)
+        archivos = list(ruta.glob(f"{nombre_base}*"))
+
+        for archivo in archivos:
+            key = prefijo + archivo.name
+            s3.upload_file(str(archivo), config.s3_bucket, key)
+
+    print(f"  ☁️  gold/ sincronizado en S3")
+    
 def pipeline_fds_docling(pdf_path: str, config, primera_ejecucion: bool = False):
     nombre_base = Path(pdf_path).stem
 
@@ -172,6 +194,8 @@ def pipeline_fds_docling(pdf_path: str, config, primera_ejecucion: bool = False)
         json.dump(metadata, f, ensure_ascii=False, indent=2)
 
     extraer_imagenes_soporte(pdf_path, config, nombre_base)
+    if S3_DISPONIBLE:
+        _subir_gold_a_s3(config, nombre_base)
 
     return {
         "tablas":  len(tablas),

@@ -12,6 +12,12 @@ root_path = Path(__file__).resolve().parent.parent.parent
 if str(root_path) not in sys.path:
     sys.path.append(str(root_path))
 
+try:
+    from s3_sync import sync_vector_db
+    S3_DISPONIBLE = True
+except ImportError:
+    S3_DISPONIBLE = False
+
 from config import ProjectConfig
 
 # ─────────────────────────────────────────────
@@ -377,6 +383,10 @@ def pipeline_chunking_e_ingesta(config):
     print(f"\nTotal: {len(todos_los_chunks)} chunks para ingesta.\n")
     ingestar_por_tipo(todos_los_chunks, config)
     print("\nProceso terminado. Colecciones fds_textos y fds_tablas actualizadas.")
+    if S3_DISPONIBLE:
+        print("\n☁️  Subiendo vector_db/ a S3...")
+        sync_vector_db(config, direccion="push")
+
 
 
 if __name__ == "__main__":

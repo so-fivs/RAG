@@ -31,6 +31,11 @@ warnings.filterwarnings("ignore")
 
 from config import ProjectConfig
 from rag_pipeline import RAGPipeline, ConversationalContext
+try:
+    from s3_sync import sync_vector_db
+    S3_DISPONIBLE = True
+except ImportError:
+    S3_DISPONIBLE = False
 
 # ── Modelos Pydantic ────────────────────────────────────────────────────
 class ChatRequest(BaseModel):
@@ -101,10 +106,15 @@ async def startup_event():
     logging.getLogger('chromadb').setLevel(logging.ERROR)
     print("\n" + "="*70 + "\nIniciando RAG System v2...\n" + "="*70)
 
+    db_vacia = not db_path.exists() or not any(db_path.rglob("*.sqlite3"))
+    if S3_DISPONIBLE and db_vacia:
+        print("  ☁️  vector_db/ vacío o inexistente — descargando de S3...")
+        sync_vector_db(config, direccion="pull")
+    elif not S3_DISPONIBLE and db_vacia:
+        raise Exception(f"ChromaDB no encontrado en {db_path} y S3 no disponible")
+
     try:
         rag_pipeline = RAGPipeline(config)
-        if not db_path.exists():
-            raise Exception(f"ChromaDB no encontrado en {db_path}")
         print("Sistema RAG listo.\n" + "="*70)
     except Exception:
         traceback.print_exc()
