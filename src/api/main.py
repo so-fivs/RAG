@@ -120,6 +120,16 @@ async def startup_event():
         traceback.print_exc()
         raise
 
+@app.get("/health")
+async def health():
+    return {
+        "status":           "ok",
+        "rag_initialized":  rag_pipeline is not None,
+        "db_exists":        db_path.exists(),
+        "s3_disponible":    S3_DISPONIBLE,
+        "sessions_activas": list(sessions.keys()),
+    }
+ 
 # ── Lógica principal ─────────────────────────────────────────────────────
 async def run_chat_logic(request: ChatRequest) -> Dict[str, Any]:
     if not rag_pipeline:

@@ -24,7 +24,7 @@ from config import ProjectConfig
 # ─────────────────────────────────────────────────────────────────────────────
 # CONFIGURACION
 # ─────────────────────────────────────────────────────────────────────────────
-BUCKET_NAME = "rag-fds-data"
+BUCKET_NAME = "rag-fds-data-2"
 AWS_REGION  = "us-east-1"
 BUCKET_URL  = f"https://{BUCKET_NAME}.s3.{AWS_REGION}.amazonaws.com"
 
