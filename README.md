@@ -10,7 +10,7 @@ Sistema RAG (**Retrieval-Augmented Generation**) para consultar Fichas de Datos 
 graph TB
     subgraph INPUT["📥 Ingesta (Bronze → Silver → Gold)"]
         A[PDFs FDS<br/>data/bronze/] -->|extrac_pdf.py| B[Textos + Tablas + Imágenes<br/>data/gold/]
-        B -->|chunkers_embedder.py| C[Chunks + Embeddings 768D<br/>data/silver/chunked/]
+        B -->|chunkers-embedder.py| C[Chunks + Embeddings 768D<br/>data/silver/chunked/]
         B -->|image_vision_processor.py| D[Descripciones visuales<br/>llava:7b]
         C --> E[ChromaDB<br/>data/vector_db/]
         D --> E
@@ -64,7 +64,7 @@ flowchart LR
 
     A -->|extrac_pdf.py| B & C & D & E
     D -->|image_vision_processor.py\nllava:7b| D
-    B & C & D & E -->|chunkers_embedder.py\nnomic-embed-text| F
+    B & C & D & E -->|chunkers-embedder.py\nnomic-embed-text| F
     F -->|chromadb_ingestor.py| G
 ```
 
@@ -167,7 +167,7 @@ RAG/
 │
 ├── scripts/
 │   ├── analyze_db.py
-│   ├── chunkers_embedder.py
+│   ├── chunkers-embedder.py
 │   └── cleanup_chromadb.py
 │
 ├── src/
@@ -204,7 +204,7 @@ pip install -r requirements.txt
 
 # Pipeline de procesamiento (una vez por lote de PDFs)
 python src/ingest/extrac_pdf.py
-python src/ingest/chunkers_embedder.py
+python src/ingest/chunkers-embedder.py
 python src/ingest/image_vision_procesor.py   # requiere llava:7b
 python src/ingest/chromadb_ingestor.py
 python src/ingest/chromadb_diagnostic.py     # verificar ingesta

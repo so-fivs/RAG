@@ -1,0 +1,22 @@
+# Copia este archivo a terraform.tfvars y ajusta los valores.
+# NUNCA subas terraform.tfvars con datos reales a git (ya está en .gitignore de infra/).
+
+aws_region   = "us-east-1"
+project_name = "rag-fds"
+
+# Déjalo vacío para que se genere automáticamente con el account_id
+bucket_name = ""
+
+# Key pair del Learner Lab (normalmente se llama "vockey")
+key_name = "vockey"
+
+# Pon tu IP pública /32, nunca 0.0.0.0/0. Consulta la tuya en https://checkip.amazonaws.com
+ssh_allowed_cidr = "203.0.113.10/32"
+
+# 0.0.0.0/0 si quieres que el API sea accesible públicamente
+api_allowed_cidr = "0.0.0.0/0"
+
+instance_type = "t3.xlarge"
+
+repo_url    = "https://github.com/so-fivs/RAG.git"
+repo_branch = "main"
